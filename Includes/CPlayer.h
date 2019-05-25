@@ -76,6 +76,8 @@ public:
 	void					Rotate(int x);
 	bool					isDead;
 	void					SetPosition(Vec2 currentPosition);
+	int						speed;
+	
 
 private:
 	//-------------------------------------------------------------------------

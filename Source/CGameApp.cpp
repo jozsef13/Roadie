@@ -19,7 +19,6 @@ bool		p1Shoot = false;
 bool		p2Shoot = false;
 int frameCounter = 0;
 bool okLoad = 0;
-int speed = 10;
 static UINT fTimer;
 
 //-----------------------------------------------------------------------------
@@ -313,6 +312,9 @@ LRESULT CGameApp::DisplayWndProc( HWND hWnd, UINT Message, WPARAM wParam, LPARAM
 //-----------------------------------------------------------------------------
 bool CGameApp::BuildObjects()
 {
+	int x, y;
+	long long int frameCounterLocal;
+	//int currentSpeed;
 	m_pBBuffer = new BackBuffer(m_hWnd, m_nViewWidth, m_nViewHeight);
 	m_pPlayer = new CPlayer(m_pBBuffer, "data/car4.bmp");
 	m_scoreP1 = new ScoreSprite(Vec2(95, 100), m_pBBuffer);
@@ -321,7 +323,7 @@ bool CGameApp::BuildObjects()
 	//m_wonSprite = new Sprite("data/winscreen.bmp", RGB(0xff, 0x00, 0xff));
 	//m_lostSprite = new Sprite("data/losescreen.bmp", RGB(0xff, 0x00, 0xff));
 
-	//addEnemies(ceil((m_screenSize.x - 600) / 100) * 4);
+	addEnemies(10, 2);
 
 	//m_wonSprite->setBackBuffer(m_pBBuffer);
 	//m_lostSprite->setBackBuffer(m_pBBuffer);
@@ -344,7 +346,7 @@ bool CGameApp::BuildObjects()
 //-----------------------------------------------------------------------------
 void CGameApp::SetupGameState()
 {
-	m_pPlayer->Position() = Vec2(700, 600);
+	m_pPlayer->Position() = Vec2(690, 600);
 
 	m_pPlayer->frameCounter() = 250;
 
@@ -395,7 +397,7 @@ void CGameApp::ReleaseObjects( )
 		scoreText = NULL;
 	}
 
-	//while (!m_enemies.empty()) delete m_enemies.front(), m_enemies.pop_front();
+	while (!m_enemies.empty()) delete m_enemies.front(), m_enemies.pop_front();
 	//while (!bullets.empty()) delete bullets.front(), bullets.pop_front();
 	while (!m_livesGreen.empty()) delete m_livesGreen.front(), m_livesGreen.pop_front();
 	//while (!m_livesRed.empty()) delete m_livesRed.front(), m_livesRed.pop_front();
@@ -462,31 +464,11 @@ void CGameApp::ProcessInput( )
 	// Check the relevant keys
 	if (!m_pPlayer->isDead)
 	{
-		//if (pKeyBuffer[VK_UP] & 0xF0) Direction |= CPlayer::DIR_FORWARD;
-		//if (pKeyBuffer[VK_DOWN] & 0xF0) Direction |= CPlayer::DIR_BACKWARD;
+		if (pKeyBuffer[VK_UP] & 0xF0) Direction |= CPlayer::DIR_FORWARD;
+		if (pKeyBuffer[VK_DOWN] & 0xF0) Direction |= CPlayer::DIR_BACKWARD;
 		if (pKeyBuffer[VK_LEFT] & 0xF0) Direction |= CPlayer::DIR_LEFT;
 		if (pKeyBuffer[VK_RIGHT] & 0xF0) Direction |= CPlayer::DIR_RIGHT;
-		if (pKeyBuffer[VK_UP] & 0xF0)
-		{
-			if (speed <= 100)
-			{
-				speed++;
-				scrollingBackground(speed);
-			}	
-		}
-		else if (pKeyBuffer[VK_DOWN] & 0xF0)
-		{
-			if (speed > 0)
-			{
-				speed--;
-				scrollingBackground(speed);
-			}
-			else if(speed <= 0)
-			{
-				speed = 10;
-				scrollingBackground(speed);
-			}
-		}
+
 		/*if (pKeyBuffer[VK_SPACE] & 0xF0 && m_pPlayer->frameCounter() >= 20)
 		{
 			fireBullet(m_pPlayer->Position(), Vec2(0, -250), 1);
@@ -529,6 +511,7 @@ void CGameApp::AnimateObjects()
 			m_pPlayer->Update(m_Timer.GetTimeElapsed());
 			m_pPlayer->frameCounter()++;
 		}
+
 		
 		/*for (auto bul : bullets)
 		{
@@ -539,15 +522,15 @@ void CGameApp::AnimateObjects()
 				bullets.remove(bul);
 				break;
 			}
-		}
+		}*/
 
-		EnemyMove();
+		//EnemyMove();
 		
 		for (auto enem : m_enemies) {
 			enem->Update(m_Timer.GetTimeElapsed());
 		}
 
-		enemyFire();*/
+		//enemyFire();
 		break;
 	
 	case GameState::WON:
@@ -566,8 +549,9 @@ void CGameApp::AnimateObjects()
 //-----------------------------------------------------------------------------
 void CGameApp::DrawObjects()
 {
+	int speedBackground = 15;
 	m_pBBuffer->reset();
-	scrollingBackground(speed);
+	scrollingBackground(speedBackground);
 
 	switch (m_gameState)
 	{
@@ -585,13 +569,13 @@ void CGameApp::DrawObjects()
 		/*for (auto bul : bullets)
 		{
 			bul->draw();
-		}
+		}*/
 
 		for (auto enem : m_enemies)
 		{
 			enem->Draw();
-			enem->frameCounter()++;
-		}*/
+			//enem->frameCounter()++;
+		}
 		break;
 	case GameState::LOST:
 		m_scoreP1->draw();
@@ -610,40 +594,96 @@ void CGameApp::DrawObjects()
 	m_pBBuffer->present();
 }
 
-/*void CGameApp::addEnemies(int noEnemies)
-{
-	Vec2 position = Vec2(300, 50);
+void CGameApp::addEnemies(int nrEnemies, int timeVelocity)
+{	
+	int velocityY, positionX, positionY, auxPositionY[1002] = {}, ok = 0, speedBackground = 10, i, j, okPos = 0, timeVelocityLocal;
 	srand(time(NULL));
-	int ok = 1;
 
-	for (int it = 0; it != noEnemies; ++it) {
-		if (ok > 3) ok = 1;
-
-		switch (ok)
+	velocityY = 25;
+	positionY = -100;
+	auxPositionY[0] = positionY;
+	for (i = 0; i < nrEnemies; i++)
+	{
+		m_enemies.push_back(new CPlayer(m_pBBuffer, "data/car2.bmp"));
+		positionX = 10;
+		ok = 0;
+		while (ok == 0)
 		{
-		case 1:
-			m_enemies.push_back(new CPlayer(m_pBBuffer, "data/alien1p1.bmp"));
-			break;
-		case 2:
-			m_enemies.push_back(new CPlayer(m_pBBuffer, "data/alien2p1.bmp"));
-			break;
-		case 3:
-			m_enemies.push_back(new CPlayer(m_pBBuffer, "data/alien3p1.bmp"));
-			break;
-		}
-		
-		m_enemies.back()->Position() = position;
-		m_enemies.back()->Velocity() = Vec2(0, 0);
-		m_enemies.back()->frameCounter() = rand() % 1000;
+			positionX = rand() % GetSystemMetrics(SM_CXSCREEN);
+			
+			//banda 1
+			if (positionX == 290 && ok == 0)
+				ok = 1;
+			
+			//banda 2
+			if (positionX == 490 && ok == 0)
+				ok = 1;
 
-		position.x += 100;
-		if (position.x > m_screenSize.x - 300) {
-			ok++;
-			position.x = 300;
-			position.y += 100;
+			//banda 3
+			if (positionX == 690 && ok == 0)
+				ok = 1;
+
+			//banda 4
+			if (positionX == 890 && ok == 0)
+				ok = 1;
+
+
+			//banda 5
+			if (positionX == 1110 && ok == 0)
+				ok = 1;
+
+			//banda 6
+			if (positionX == (GetSystemMetrics(SM_CXSCREEN) - 230) && ok == 0)
+				ok = 1;
+		}
+
+		m_enemies.back()->Position() = Vec2(positionX, positionY);
+		m_enemies.back()->Velocity() = Vec2(0, velocityY);
+
+		auxPositionY[i + 1] = rand() % (nrEnemies * 100) + 100;
+		positionY = auxPositionY[i + 1] - (2 * auxPositionY[i + 1]);
+		auxPositionY[i + 1] = positionY;
+		for (j = 0; j < i + 1; j++)
+		{
+			okPos = 0;
+			while (okPos == 0)
+			{
+				if (auxPositionY[j] > auxPositionY[i + 1])
+				{
+					if (auxPositionY[j] - auxPositionY[i + 1] > 240) 
+						okPos = 1;
+				}
+				
+				if (auxPositionY[j] < auxPositionY[i + 1])
+				{
+					if (auxPositionY[j] - auxPositionY[i + 1] < -240) 
+						okPos = 1;
+				}
+
+				if (okPos == 0)
+				{
+					auxPositionY[i + 1] = rand() % (nrEnemies * 100) + 100;
+					positionY = auxPositionY[i + 1] - (2 * auxPositionY[i + 1]);
+					auxPositionY[i + 1] = positionY;
+				}
+			}
+		}
+
+		if (i > 2)
+		{
+			int iMod = i / 2;
+			if (iMod % nrEnemies == 0)
+			{
+				if (timeVelocityLocal <= timeVelocity)
+				{
+					timeVelocityLocal++;
+					velocityY++;
+				}
+			}
 		}
 	}
-}*/
+	
+}
 
 
 void CGameApp::removeDead()
@@ -655,14 +695,14 @@ void CGameApp::removeDead()
 		m_pPlayer->Explode();
 	}
 
-	/*for (auto enem : m_enemies)
+	for (auto enem : m_enemies)
 	{
 		if (enem->isDead)
 		{
 			m_enemies.remove(enem);
 			break;
 		}
-	}*/
+	}
 }
 
 bool CGameApp::Collision(CPlayer* p1, CPlayer* p2)
@@ -856,8 +896,9 @@ void CGameApp::updateGameState()
 
 void CGameApp::scrollingBackground(int speed)
 {
+	int x, y, i;
+	int currentSpeed = speed;
 	static int currentY = m_imgBackground.Height();
-
 	static size_t lastTime = ::GetTickCount();
 	size_t currentTime = ::GetTickCount();
 
@@ -867,9 +908,12 @@ void CGameApp::scrollingBackground(int speed)
 		currentY -= speed;
 		if (currentY < 0)
 			currentY = m_imgBackground.Height();
+
+		
 	}
 
 	m_imgBackground.Paint(m_pBBuffer->getDC(), 0, currentY);
+	
 }
 
 void CGameApp::SaveGame(CPlayer* Player1) {

@@ -70,7 +70,7 @@ private:
 	void		AnimateObjects	( );
 	void		DrawObjects	   ( );
 	void		ProcessInput	  ( );
-	void		addEnemies(int noEnemies);
+	void		addEnemies(int nrEnemies, int timeVelocity);
 	void		removeDead();
 	bool		Collision(CPlayer* p1, CPlayer* p2);
 	bool		bulletCollision(const Sprite& bullet, CPlayer& p1);

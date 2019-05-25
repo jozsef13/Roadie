@@ -27,6 +27,7 @@ CPlayer::CPlayer(const BackBuffer *pBackBuffer,const char* path) : rotateDirecti
 	m_fTimer = 0;
 	isDead = false;
 	lives = 1;
+	speed = 10;
 
 	m_pSprite->setBackBuffer(pBackBuffer);
 
@@ -127,6 +128,9 @@ void CPlayer::Move(ULONG ulDirection)
 		m_pSprite->mVelocity.x -= 5;
 	}
 
+
+
+
 	if (m_pSprite->mPosition.x + m_pSprite->width()/2 >= GetSystemMetrics(SM_CXSCREEN) - 155)
 	{
 		m_pSprite->mVelocity.x = 0;
@@ -146,6 +150,8 @@ void CPlayer::Move(ULONG ulDirection)
 	{
 		m_pSprite->mVelocity.y -= 5;
 	}
+
+
 
 	if (m_pSprite->mPosition.y + m_pSprite->height()/2 >= GetSystemMetrics(SM_CYSCREEN) - 75)
 	{
