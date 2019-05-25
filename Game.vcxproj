@@ -170,6 +170,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="Source\MenuSprite.cpp" />
     <ClCompile Include="Source\ResizeEngine.cpp" />
     <ClCompile Include="Source\ScoreSprite.cpp" />
     <ClCompile Include="Source\Sprite.cpp" />
@@ -183,6 +184,7 @@
     <ClInclude Include="Includes\Filters.h" />
     <ClInclude Include="Includes\ImageFile.h" />
     <ClInclude Include="Includes\Main.h" />
+    <ClInclude Include="Includes\MenuSprite.h" />
     <ClInclude Include="Includes\ResizeEngine.h" />
     <ClInclude Include="Includes\ScoreSprite.h" />
     <ClInclude Include="Includes\Sprite.h" />

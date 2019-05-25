@@ -48,6 +48,9 @@
     <ClCompile Include="Source\ScoreSprite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\MenuSprite.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Includes\BackBuffer.h">
@@ -84,6 +87,9 @@
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="Includes\ScoreSprite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Includes\MenuSprite.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

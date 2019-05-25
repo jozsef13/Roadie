@@ -26,8 +26,6 @@ CPlayer::CPlayer(const BackBuffer *pBackBuffer,const char* path) : rotateDirecti
 	m_eSpeedState = SPEED_STOP;
 	m_fTimer = 0;
 	isDead = false;
-	lives = 1;
-	speed = 10;
 
 	m_pSprite->setBackBuffer(pBackBuffer);
 

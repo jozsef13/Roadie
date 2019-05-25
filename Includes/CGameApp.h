@@ -18,6 +18,7 @@
 #include "BackBuffer.h"
 #include "ImageFile.h"
 #include "ScoreSprite.h"
+#include "MenuSprite.h"
 
 //-----------------------------------------------------------------------------
 // Forward Declarations
@@ -55,6 +56,13 @@ public:
 		WON,
 		PAUSE
 	};
+	enum Levels {
+		LEVEL1,
+		LEVEL2,
+		LEVEL3,
+		LEVEL4,
+		LEVEL5
+	};
 
 	BackBuffer*				m_pBBuffer;
 	
@@ -70,9 +78,9 @@ private:
 	void		AnimateObjects	( );
 	void		DrawObjects	   ( );
 	void		ProcessInput	  ( );
-	void		addEnemies(int nrEnemies, int timeVelocity);
+	void		addEnemies(int nrEnemies, int timeVelocity, int velocity);
 	void		removeDead();
-	bool		Collision(CPlayer* p1, CPlayer* p2);
+	bool		Collision();
 	bool		bulletCollision(const Sprite& bullet, CPlayer& p1);
 	void		fireBullet(const Vec2 position, const Vec2 velocity, int x);
 	bool		detectBulletCollision(const Sprite* bullet);
@@ -81,8 +89,6 @@ private:
 	void		setPLives(int livesP1);
 	void		updateGameState();
 	void		scrollingBackground(int speed);
-	void        SaveGame(CPlayer* Player1);
-	void        LoadGame(CPlayer* Player1);
 
 	
 	//-------------------------------------------------------------------------
@@ -123,7 +129,7 @@ private:
 	std::list<Sprite*>		bullets;
 	int						frameCounter = 0;
 
-	std::list<Sprite*>		p1Life;
+	std::list<Sprite*>			p1Life;
 
 	GameState					m_gameState;			// Game state (ongoing, won, lost)
 	Sprite*						m_wonSprite;			// Information to be displayed when game is won
@@ -131,6 +137,10 @@ private:
 
 	Sprite*						livesText;
 	Sprite*						scoreText;
+
+	MenuSprite*					gameMenu;
+
+	GameState					_gameState;
 
 };
 

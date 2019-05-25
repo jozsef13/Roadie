@@ -1,8 +1,7 @@
-- Add obstacles
+- Add obstacles - ok
 - Add powerups: - bullet, vulnerabilit, double points.
 - Add menu
 - Add levels
-- Add cars
-- Add Time
+- Add cars - ok
 - Add sounds
 - Add menu background
