@@ -91,6 +91,7 @@ private:
 	void		scrollingBackground(int speed);
 	void		saveGame();
 	void		loadGame();
+	void		updateLevelState();
 
 	
 	//-------------------------------------------------------------------------
@@ -138,6 +139,11 @@ private:
 	Levels						m_levels;
 	Sprite*						m_wonSprite;			// Information to be displayed when game is won
 	Sprite*						m_lostSprite;		// Information to be displayed when game is lost
+	Sprite*						m_level1Text;
+	Sprite*						m_level2Text;
+	Sprite*						m_level3Text;
+	Sprite*						m_level4Text;
+	Sprite*						m_level5Text;
 
 	Sprite*						livesText;
 	Sprite*						scoreText;

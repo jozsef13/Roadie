@@ -13,6 +13,7 @@
 #include <cstdlib> 
 #include <ctime> 
 #include <fstream>
+#include <cmath>
 
 extern HINSTANCE g_hInst;
 bool		p1Shoot = false;
@@ -20,6 +21,7 @@ bool		p2Shoot = false;
 int			frameCounter = 0;
 bool		okLoad = 0;
 static UINT fTimer;
+int			incrementScore = 0;
 
 //-----------------------------------------------------------------------------
 // CGameApp Member Functions
@@ -42,6 +44,11 @@ CGameApp::CGameApp()
 	livesText		= NULL;
 	scoreText		= NULL;
 	gameMenu		= NULL;
+	m_level1Text	= NULL;
+	m_level2Text	= NULL;
+	m_level3Text	= NULL;
+	m_level4Text	= NULL;
+	m_level5Text	= NULL;
 	m_LastFrameRate = 0;
 }
 
@@ -272,13 +279,9 @@ LRESULT CGameApp::DisplayWndProc( HWND hWnd, UINT Message, WPARAM wParam, LPARAM
 			case VK_ESCAPE:
 				if (m_gameState == GameState::ONGOING) m_gameState = GameState::PAUSE;
 				else if (m_gameState == GameState::LOST) m_gameState = GameState::START;
+				else if (m_gameState == GameState::WON) m_gameState = GameState::START;
 				else PostQuitMessage(0);
 				break;
-			case VK_RETURN:
-				if (m_gameState == GameState::WON && m_levels == Levels::LEVEL1) m_levels = Levels::LEVEL2;
-				else if (m_gameState == GameState::WON && m_levels == Levels::LEVEL2) m_levels = Levels::LEVEL3;
-				else if (m_gameState == GameState::WON && m_levels == Levels::LEVEL3) m_levels = Levels::LEVEL4;
-				else if (m_gameState == GameState::WON && m_levels == Levels::LEVEL4) m_levels = Levels::LEVEL5;
 			}
 			break;
 
@@ -322,10 +325,21 @@ bool CGameApp::BuildObjects()
 	m_lostSprite = new Sprite("data/losescreen.bmp", RGB(0xff, 0x00, 0xff));
 
 	gameMenu = new MenuSprite(Vec2(m_screenSize.x / 2, m_screenSize.y / 2 - 200), m_pBBuffer);
-	addEnemies(25, 2, 50);
 
 	m_wonSprite->setBackBuffer(m_pBBuffer);
 	m_lostSprite->setBackBuffer(m_pBBuffer);
+	addEnemies(20, 2, 70);
+	m_level1Text = new Sprite("data/level1_text.bmp", RGB(0xff, 0x00, 0xff));
+	m_level2Text = new Sprite("data/level2_text.bmp", RGB(0xff, 0x00, 0xff));
+	m_level3Text = new Sprite("data/level3_text.bmp", RGB(0xff, 0x00, 0xff));
+	m_level4Text = new Sprite("data/level4_text.bmp", RGB(0xff, 0x00, 0xff));
+	m_level5Text = new Sprite("data/level5_text.bmp", RGB(0xff, 0x00, 0xff));
+
+	m_level1Text->setBackBuffer(m_pBBuffer);
+	m_level2Text->setBackBuffer(m_pBBuffer);
+	m_level3Text->setBackBuffer(m_pBBuffer);
+	m_level4Text->setBackBuffer(m_pBBuffer);
+	m_level5Text->setBackBuffer(m_pBBuffer);
 	
 	livesText->setBackBuffer(m_pBBuffer);
 	scoreText->setBackBuffer(m_pBBuffer);
@@ -353,11 +367,17 @@ void CGameApp::SetupGameState()
 
 	livesText->mPosition = Vec2(80, 30);
 	scoreText->mPosition = Vec2(80, 125);
+	m_level1Text->mPosition = Vec2(80, 230);
+	m_level2Text->mPosition = Vec2(80, 230);
+	m_level3Text->mPosition = Vec2(80, 230);
+	m_level4Text->mPosition = Vec2(80, 230);
+	m_level5Text->mPosition = Vec2(80, 230);
 
 	m_wonSprite->mPosition = Vec2(int(m_screenSize.x / 2), int(m_screenSize.y / 2));
 	m_lostSprite->mPosition = Vec2(int(m_screenSize.x / 2), int(m_screenSize.y / 2));
 
 	m_gameState = GameState::START;
+	m_levels = Levels::LEVEL1;
 }
 
 //-----------------------------------------------------------------------------
@@ -396,6 +416,36 @@ void CGameApp::ReleaseObjects( )
 	if (scoreText != NULL) {
 		delete scoreText;
 		scoreText = NULL;
+	}
+
+	if (m_level1Text != NULL)
+	{
+		delete m_level1Text;
+		m_level1Text = NULL;
+	}
+
+	if (m_level2Text != NULL)
+	{
+		delete m_level2Text;
+		m_level2Text = NULL;
+	}
+
+	if (m_level3Text != NULL)
+	{
+		delete m_level3Text;
+		m_level3Text = NULL;
+	}
+
+	if (m_level4Text != NULL)
+	{
+		delete m_level4Text;
+		m_level4Text = NULL;
+	}
+
+	if (m_level5Text != NULL)
+	{
+		delete m_level5Text;
+		m_level5Text = NULL;
 	}
 
 	if (gameMenu != NULL) {
@@ -537,12 +587,21 @@ void CGameApp::ProcessInput( )
 void CGameApp::AnimateObjects()
 {
 	updateGameState();
+	//updateLevelState();
 
 	switch (m_gameState)
 	{
 	case GameState::ONGOING:
+		
 		if (!m_pPlayer->isDead)
 		{
+			if (!m_pPlayer->hasExploded())
+			{
+				incrementScore++;
+				if(incrementScore % 50 == 0)
+					m_scoreP1->updateScore(1);
+			}
+			
 			m_pPlayer->Update(m_Timer.GetTimeElapsed());
 			m_pPlayer->frameCounter()++;
 		}
@@ -550,9 +609,17 @@ void CGameApp::AnimateObjects()
 		for (auto enem : m_enemies)
 		{
 			enem->Update(m_Timer.GetTimeElapsed());
+
+			if (enem->Position().y + (enem->getSize().y / 2) >= GetSystemMetrics(SM_CYSCREEN) - 75)
+			{
+				enem->isDead = 1;
+			}
 		}
 		
-		Collision();
+		if (Collision())
+		{
+			m_scoreP1->updateScore(-100);
+		}
 
 		/*for (auto bul : bullets)
 		{
@@ -568,11 +635,16 @@ void CGameApp::AnimateObjects()
 		break;
 	
 	case GameState::WON:
-		m_scoreP1->move(Vec2(m_screenSize.x / 2 - 150, m_screenSize.y / 2 + 200));
+		switch (m_levels)
+		{
+		case Levels::LEVEL5:
+			m_scoreP1->move(Vec2(m_screenSize.x / 2, m_screenSize.y / 2 + 100));
+			break;
+		}
 		break;
 	
 	case GameState::LOST:
-		m_scoreP1->move(Vec2(m_screenSize.x / 2 - 150, m_screenSize.y / 2 + 200));
+		m_scoreP1->move(Vec2(m_screenSize.x / 2, m_screenSize.y / 2 + 100));
 		break;
 	}
 }
@@ -597,7 +669,6 @@ void CGameApp::DrawObjects()
 		livesText->draw();
 		scoreText->draw();
 		m_scoreP1->draw();
-
 		if (!m_pPlayer->isDead) m_pPlayer->Draw();
 
 		for (auto lg : m_livesGreen) lg->draw();
@@ -612,6 +683,30 @@ void CGameApp::DrawObjects()
 			enem->Draw();
 		}
 
+		switch (m_levels)
+		{
+		case Levels::LEVEL1:
+			
+			m_level1Text->draw();
+			break;
+			
+		case Levels::LEVEL2:
+			m_level2Text->draw();
+			break;
+
+		case Levels::LEVEL3:
+			m_level3Text->draw();
+			break;
+
+		case Levels::LEVEL4:
+			m_level4Text->draw();
+			break;
+
+		case Levels::LEVEL5:
+			m_level5Text->draw();
+			break;
+		}
+		
 		break;
 	case GameState::LOST:
 		scrollingBackground(speedBackground);
@@ -620,12 +715,18 @@ void CGameApp::DrawObjects()
 		break;
 	case GameState::WON:
 		scrollingBackground(speedBackground);
-		m_scoreP1->draw();
-		m_wonSprite->draw();
+		switch (m_levels) 
+		{
+		case Levels::LEVEL5:
+			m_scoreP1->draw();
+			m_wonSprite->draw();
+			break;
+		}
 		break;
 	case GameState::PAUSE:
 		m_scoreP1->draw();
 		for (auto lg : m_livesGreen) lg->draw();
+		m_level1Text->draw();
 		break;
 	default:
 		break;
@@ -692,7 +793,7 @@ void CGameApp::addEnemies(int nrEnemies, int timeVelocity, int velocity)
 		m_enemies.back()->Position() = Vec2(positionX, positionY);
 		m_enemies.back()->Velocity() = Vec2(0, velocityY);
 
-		auxPositionY[i + 1] = rand() % (nrEnemies * 500) + 100;
+		auxPositionY[i + 1] = rand() % (nrEnemies * 250) + 100;
 		positionY = auxPositionY[i + 1] - (2 * auxPositionY[i + 1]);
 		auxPositionY[i + 1] = positionY;
 		for (j = 0; j < i + 1; j++)
@@ -714,7 +815,7 @@ void CGameApp::addEnemies(int nrEnemies, int timeVelocity, int velocity)
 
 				if (okPos == 0)
 				{
-					auxPositionY[i + 1] = rand() % (nrEnemies * 100) + 100;
+					auxPositionY[i + 1] = rand() % (nrEnemies * 250) + 100;
 					positionY = auxPositionY[i + 1] - (2 * auxPositionY[i + 1]);
 					auxPositionY[i + 1] = positionY;
 				}
@@ -729,7 +830,7 @@ void CGameApp::addEnemies(int nrEnemies, int timeVelocity, int velocity)
 				if (timeVelocityLocal <= timeVelocity)
 				{
 					timeVelocityLocal++;
-					velocityY++;
+					velocityY += 5;
 				}
 			}
 		}
@@ -919,6 +1020,42 @@ void CGameApp::updateGameState()
 	else if (!m_enemies.size() && m_gameState == ONGOING) {
 		m_gameState = WON;
 	}
+	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL1)
+	{
+		addEnemies(25, 3, 70);
+		m_pPlayer->Position() = Vec2(690, 600);
+		m_pPlayer->Velocity() = Vec2(0, 0);
+		m_levels = LEVEL2;
+		m_gameState = ONGOING;
+	}
+	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL2)
+	{
+		addEnemies(28, 3, 75);
+		m_pPlayer->Position() = Vec2(690, 600);
+		m_pPlayer->Velocity() = Vec2(0, 0);
+		m_levels = LEVEL3;
+		m_gameState = ONGOING;
+	}
+	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL3)
+	{
+		addEnemies(30, 3, 75);
+		m_pPlayer->Position() = Vec2(690, 600);
+		m_pPlayer->Velocity() = Vec2(0, 0);
+		m_levels = LEVEL4;
+		m_gameState = ONGOING;
+	}
+	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL4)
+	{
+		addEnemies(35, 4, 80);
+		m_pPlayer->Position() = Vec2(690, 600);
+		m_pPlayer->Velocity() = Vec2(0, 0);
+		m_levels = LEVEL5;
+		m_gameState = ONGOING;
+	}
+	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL5)
+	{
+		m_gameState = WON;
+	}
 	else if (m_gameState == ONGOING) {
 		m_gameState = ONGOING;
 	}
@@ -953,7 +1090,7 @@ void CGameApp::scrollingBackground(int speed)
 void CGameApp::saveGame()
 {
 	std::ofstream save("savegame/savegame.save");
-
+	
 	save << m_pPlayer->Position().x << " " << m_pPlayer->Position().y << " " << m_pPlayer->getLives() << " ";
 	save << m_scoreP1->getScore() << "\n";
 
@@ -975,6 +1112,7 @@ void CGameApp::loadGame()
 
 	double cdx, cdy;
 	int livesP, score, noEnem;
+	Levels levelLoc;
 
 	save >> cdx >> cdy >> livesP >> score;
 	m_pPlayer->Position() = Vec2(cdx, cdy);
