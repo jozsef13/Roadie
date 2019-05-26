@@ -378,6 +378,7 @@ void CGameApp::SetupGameState()
 
 	m_gameState = GameState::START;
 	m_levels = Levels::LEVEL1;
+	levelForSave = "level1";
 }
 
 //-----------------------------------------------------------------------------
@@ -598,7 +599,7 @@ void CGameApp::AnimateObjects()
 			if (!m_pPlayer->hasExploded())
 			{
 				incrementScore++;
-				if(incrementScore % 50 == 0)
+				if(incrementScore % 25 == 0)
 					m_scoreP1->updateScore(1);
 			}
 			
@@ -1026,6 +1027,7 @@ void CGameApp::updateGameState()
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
 		m_levels = LEVEL2;
+		levelForSave = "level2";
 		m_gameState = ONGOING;
 	}
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL2)
@@ -1034,6 +1036,7 @@ void CGameApp::updateGameState()
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
 		m_levels = LEVEL3;
+		levelForSave = "level3";
 		m_gameState = ONGOING;
 	}
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL3)
@@ -1042,6 +1045,7 @@ void CGameApp::updateGameState()
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
 		m_levels = LEVEL4;
+		levelForSave = "level4";
 		m_gameState = ONGOING;
 	}
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL4)
@@ -1050,6 +1054,7 @@ void CGameApp::updateGameState()
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
 		m_levels = LEVEL5;
+		levelForSave = "level5";
 		m_gameState = ONGOING;
 	}
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL5)
@@ -1090,9 +1095,10 @@ void CGameApp::scrollingBackground(int speed)
 void CGameApp::saveGame()
 {
 	std::ofstream save("savegame/savegame.save");
-	
+
 	save << m_pPlayer->Position().x << " " << m_pPlayer->Position().y << " " << m_pPlayer->getLives() << " ";
 	save << m_scoreP1->getScore() << "\n";
+	save << levelForSave << "\n";
 
 	save << m_enemies.size() << "\n";
 
@@ -1112,9 +1118,9 @@ void CGameApp::loadGame()
 
 	double cdx, cdy;
 	int livesP, score, noEnem;
-	Levels levelLoc;
+	string levelLoc;
 
-	save >> cdx >> cdy >> livesP >> score;
+	save >> cdx >> cdy >> livesP >> score >> levelLoc;
 	m_pPlayer->Position() = Vec2(cdx, cdy);
 	m_scoreP1->setScore(score);
 
@@ -1125,4 +1131,25 @@ void CGameApp::loadGame()
 
 	save.close();
 	m_gameState = GameState::ONGOING;
+
+	if (levelLoc == "level1")
+	{
+		m_levels = Levels::LEVEL1;
+	}
+	else if (levelLoc == "level2")
+	{
+		m_levels = Levels::LEVEL2;
+	}
+	else if (levelLoc == "level3")
+	{
+		m_levels = Levels::LEVEL3;
+	}
+	else if (levelLoc == "level4")
+	{
+		m_levels = Levels::LEVEL4;
+	}
+	else if (levelLoc == "level5")
+	{
+		m_levels = Levels::LEVEL5;
+	}
 }

@@ -19,6 +19,8 @@
 #include "ImageFile.h"
 #include "ScoreSprite.h"
 #include "MenuSprite.h"
+#include <string>
+using namespace std;
 
 //-----------------------------------------------------------------------------
 // Forward Declarations
@@ -149,6 +151,7 @@ private:
 	Sprite*						scoreText;
 
 	MenuSprite*					gameMenu;
+	string						levelForSave;
 
 };
 
