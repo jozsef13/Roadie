@@ -89,6 +89,8 @@ private:
 	void		setPLives(int livesP1);
 	void		updateGameState();
 	void		scrollingBackground(int speed);
+	void		saveGame();
+	void		loadGame();
 
 	
 	//-------------------------------------------------------------------------
@@ -118,6 +120,7 @@ private:
 	Vec2					m_screenSize;
 
 	CImageFile				m_imgBackground;
+	CImageFile				m_imgBackgroundMenu;
 
 	CPlayer*				m_pPlayer;
 	std::list<CPlayer*>		m_enemies;
@@ -132,6 +135,7 @@ private:
 	std::list<Sprite*>			p1Life;
 
 	GameState					m_gameState;			// Game state (ongoing, won, lost)
+	Levels						m_levels;
 	Sprite*						m_wonSprite;			// Information to be displayed when game is won
 	Sprite*						m_lostSprite;		// Information to be displayed when game is lost
 
@@ -139,8 +143,6 @@ private:
 	Sprite*						scoreText;
 
 	MenuSprite*					gameMenu;
-
-	GameState					_gameState;
 
 };
 

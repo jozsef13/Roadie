@@ -267,11 +267,18 @@ LRESULT CGameApp::DisplayWndProc( HWND hWnd, UINT Message, WPARAM wParam, LPARAM
 			break;
 
 		case WM_KEYDOWN:
-			switch(wParam)
+			switch (wParam)
 			{
 			case VK_ESCAPE:
-				PostQuitMessage(0);
+				if (m_gameState == GameState::ONGOING) m_gameState = GameState::PAUSE;
+				else if (m_gameState == GameState::LOST) m_gameState = GameState::START;
+				else PostQuitMessage(0);
 				break;
+			case VK_RETURN:
+				if (m_gameState == GameState::WON && m_levels == Levels::LEVEL1) m_levels = Levels::LEVEL2;
+				else if (m_gameState == GameState::WON && m_levels == Levels::LEVEL2) m_levels = Levels::LEVEL3;
+				else if (m_gameState == GameState::WON && m_levels == Levels::LEVEL3) m_levels = Levels::LEVEL4;
+				else if (m_gameState == GameState::WON && m_levels == Levels::LEVEL4) m_levels = Levels::LEVEL5;
 			}
 			break;
 
@@ -314,6 +321,7 @@ bool CGameApp::BuildObjects()
 	m_wonSprite = new Sprite("data/winscreen.bmp", RGB(0xff, 0x00, 0xff));
 	m_lostSprite = new Sprite("data/losescreen.bmp", RGB(0xff, 0x00, 0xff));
 
+	gameMenu = new MenuSprite(Vec2(m_screenSize.x / 2, m_screenSize.y / 2 - 200), m_pBBuffer);
 	addEnemies(25, 2, 50);
 
 	m_wonSprite->setBackBuffer(m_pBBuffer);
@@ -324,6 +332,9 @@ bool CGameApp::BuildObjects()
 	setPLives(3);
 
 	if(!m_imgBackground.LoadBitmapFromFile("data/Background.bmp", GetDC(m_hWnd)))
+		return false;
+
+	if (!m_imgBackgroundMenu.LoadBitmapFromFile("data/backgroundMenu.bmp", GetDC(m_hWnd)))
 		return false;
 
 	// Success!
@@ -346,7 +357,7 @@ void CGameApp::SetupGameState()
 	m_wonSprite->mPosition = Vec2(int(m_screenSize.x / 2), int(m_screenSize.y / 2));
 	m_lostSprite->mPosition = Vec2(int(m_screenSize.x / 2), int(m_screenSize.y / 2));
 
-	m_gameState = GameState::ONGOING;
+	m_gameState = GameState::START;
 }
 
 //-----------------------------------------------------------------------------
@@ -385,6 +396,11 @@ void CGameApp::ReleaseObjects( )
 	if (scoreText != NULL) {
 		delete scoreText;
 		scoreText = NULL;
+	}
+
+	if (gameMenu != NULL) {
+		delete gameMenu;
+		gameMenu = NULL;
 	}
 
 	while (!m_enemies.empty()) delete m_enemies.front(), m_enemies.pop_front();
@@ -450,6 +466,37 @@ void CGameApp::ProcessInput( )
 	// Retrieve keyboard state
 	if ( !GetKeyboardState( pKeyBuffer ) ) return;
 
+	if (m_gameState == GameState::START || m_gameState == GameState::PAUSE) {
+		if (pKeyBuffer[VK_UP] & 0xF0 && gameMenu->frameCounter >= 20) {
+			gameMenu->opUp(m_gameState);
+			gameMenu->frameCounter = 0;
+		}
+		if (pKeyBuffer[VK_DOWN] & 0xF0 && gameMenu->frameCounter >= 20) {
+			gameMenu->opDown(m_gameState);
+			gameMenu->frameCounter = 0;
+		}
+
+		if (pKeyBuffer[VK_RETURN] & 0xF0) {
+			if (gameMenu->getChoice() == 0)
+				m_gameState = GameState::ONGOING;
+
+			if (gameMenu->getChoice() == 1)
+				loadGame();
+
+			if (gameMenu->getChoice() == 2)
+				saveGame();
+
+			if(gameMenu->getChoice() == 3)
+				PostQuitMessage(0);
+		}
+	}
+
+	if (m_gameState == GameState::ONGOING) {
+		if (pKeyBuffer[VK_PAUSE] & 0xF0) {
+			m_gameState = GameState::PAUSE;
+		}
+	}
+
 	// Check the relevant keys
 	if (!m_pPlayer->isDead)
 	{
@@ -505,6 +552,8 @@ void CGameApp::AnimateObjects()
 			enem->Update(m_Timer.GetTimeElapsed());
 		}
 		
+		Collision();
+
 		/*for (auto bul : bullets)
 		{
 			bul->update(m_Timer.GetTimeElapsed());
@@ -515,8 +564,6 @@ void CGameApp::AnimateObjects()
 				break;
 			}
 		}*/
-
-		Collision();
 
 		break;
 	
@@ -538,13 +585,15 @@ void CGameApp::DrawObjects()
 {
 	int speedBackground = 25;
 	m_pBBuffer->reset();
-	scrollingBackground(speedBackground);
-
+	m_imgBackgroundMenu.Paint(m_pBBuffer->getDC(), 0, 0);
+	gameMenu->draw(m_gameState);
 	switch (m_gameState)
 	{
 	case GameState::START:
+		m_pPlayer->Velocity() = Vec2(0, 0);
 		break;
 	case GameState::ONGOING:
+		scrollingBackground(speedBackground);
 		livesText->draw();
 		scoreText->draw();
 		m_scoreP1->draw();
@@ -565,12 +614,18 @@ void CGameApp::DrawObjects()
 
 		break;
 	case GameState::LOST:
+		scrollingBackground(speedBackground);
 		m_scoreP1->draw();
 		m_lostSprite->draw();
 		break;
 	case GameState::WON:
+		scrollingBackground(speedBackground);
 		m_scoreP1->draw();
 		m_wonSprite->draw();
+		break;
+	case GameState::PAUSE:
+		m_scoreP1->draw();
+		for (auto lg : m_livesGreen) lg->draw();
 		break;
 	default:
 		break;
@@ -861,6 +916,9 @@ void CGameApp::updateGameState()
 	if (m_pPlayer->isDead && m_gameState == ONGOING) {
 		m_gameState = LOST;
 	}
+	else if (!m_enemies.size() && m_gameState == ONGOING) {
+		m_gameState = WON;
+	}
 	else if (m_gameState == ONGOING) {
 		m_gameState = ONGOING;
 	}
@@ -886,4 +944,47 @@ void CGameApp::scrollingBackground(int speed)
 
 	m_imgBackground.Paint(m_pBBuffer->getDC(), 0, currentY);
 	
+}
+
+//-----------------------------------------------------------------------------
+// Name : saveGame () (Private)
+// Desc : Save current state of the game in a file.
+//-----------------------------------------------------------------------------
+void CGameApp::saveGame()
+{
+	std::ofstream save("savegame/savegame.save");
+
+	save << m_pPlayer->Position().x << " " << m_pPlayer->Position().y << " " << m_pPlayer->getLives() << " ";
+	save << m_scoreP1->getScore() << "\n";
+
+	save << m_enemies.size() << "\n";
+
+	save.close();
+}
+
+//-----------------------------------------------------------------------------
+// Name : loadGame () (Private)
+// Desc : Loads previous state of the game in a file.
+//-----------------------------------------------------------------------------
+void CGameApp::loadGame()
+{
+	std::ifstream save("savegame/savegame.save");
+	while (m_enemies.size()) delete m_enemies.back(), m_enemies.pop_back();
+	//while (_bullets.size()) delete _bullets.back(), _bullets.pop_back();
+	while (m_livesGreen.size()) delete m_livesGreen.back(), m_livesGreen.pop_back();
+
+	double cdx, cdy;
+	int livesP, score, noEnem;
+
+	save >> cdx >> cdy >> livesP >> score;
+	m_pPlayer->Position() = Vec2(cdx, cdy);
+	m_scoreP1->setScore(score);
+
+	setPLives(livesP);
+
+	save >> noEnem;
+	addEnemies(noEnem, 2, 50);
+
+	save.close();
+	m_gameState = GameState::ONGOING;
 }

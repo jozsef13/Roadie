@@ -40,7 +40,9 @@ private:
 	Sprite*				startText;
 	Sprite*				loadText;
 	Sprite*				saveText;
-	Sprite*				exitText;
+	Sprite*				exitText1;
+	Sprite*				exitText2;
+	Sprite*				resumeText;
 
 	const BackBuffer*	BF;
 

@@ -21,25 +21,35 @@ MenuSprite::MenuSprite(const Vec2 position, const BackBuffer* BF)
 	auto posSave = Vec2(position.x, position.y + 250);
 	auto posExit = Vec2(position.x, position.y + 375);
 
+	resumeText = new Sprite("data/resume_text.bmp", RGB(0xff, 0x00, 0xff));
+	resumeText->mPosition = position;
+	resumeText->mVelocity = Vec2(0, 0);
+	resumeText->setBackBuffer(BF);
+
 	startText = new Sprite("data/newgame_text.bmp", RGB(0xff, 0x00, 0xff));
 	startText->mPosition = position;
 	startText->mVelocity = Vec2(0, 0);
 	startText->setBackBuffer(BF);
 	
-	loadText = new Sprite("data/menu_options/loadgame_text.bmp", RGB(0xff, 0x00, 0xff));
+	loadText = new Sprite("data/loadgame_text.bmp", RGB(0xff, 0x00, 0xff));
 	loadText->mPosition = posLoad;
 	loadText->mVelocity = Vec2(0, 0);
 	loadText->setBackBuffer(BF);
 	
-	saveText = new Sprite("data/menu_options/savegame_text.bmp", RGB(0xff, 0x00, 0xff));
+	saveText = new Sprite("data/savegame_text.bmp", RGB(0xff, 0x00, 0xff));
 	saveText->mPosition = posSave;
 	saveText->mVelocity = Vec2(0, 0);
 	saveText->setBackBuffer(BF);
 
-	exitText = new Sprite("data/menu_options/exit_text.bmp", RGB(0xff, 0x00, 0xff));
-	exitText->mPosition = posExit;
-	exitText->mVelocity = Vec2(0, 0);
-	exitText->setBackBuffer(BF);
+	exitText1 = new Sprite("data/exit_text.bmp", RGB(0xff, 0x00, 0xff));
+	exitText1->mPosition = posSave;
+	exitText1->mVelocity = Vec2(0, 0);
+	exitText1->setBackBuffer(BF);
+
+	exitText2 = new Sprite("data/exit_text.bmp", RGB(0xff, 0x00, 0xff));
+	exitText2->mPosition = posExit;
+	exitText2->mVelocity = Vec2(0, 0);
+	exitText2->setBackBuffer(BF);
 
 	select = START;
 	updateSelect(START, true);
@@ -54,7 +64,9 @@ MenuSprite::~MenuSprite()
 	delete startText;
 	delete loadText;
 	delete saveText;
-	delete exitText;
+	delete exitText1;
+	delete exitText2;
+	delete resumeText;
 }
 
 //-----------------------------------------------------------------------------
@@ -69,7 +81,7 @@ void MenuSprite::draw(ULONG gameState)
 	case 0: // start menu
 		startText->draw();
 		loadText->draw();
-		exitText->draw();
+		exitText1->draw();
 		break;
 
 	case 1: // ongoing game.
@@ -82,10 +94,10 @@ void MenuSprite::draw(ULONG gameState)
 		break;
 
 	case 4: // paused game
-		startText->draw();
+		resumeText->draw();
 		loadText->draw();
 		saveText->draw();
-		exitText->draw();
+		exitText2->draw();
 	}
 }
 
@@ -164,36 +176,52 @@ void MenuSprite::updateSelect(CHOICE text, bool sel)
 		startText->mPosition = oldPos;
 		startText->mVelocity = Vec2(0, 0);
 		startText->setBackBuffer(BF);
+
+		oldPos = resumeText->mPosition;
+		delete resumeText;
+		resumeText = (sel) ? new Sprite("data/resumeselected_text.bmp", RGB(0xff, 0x00, 0xff)) :
+			new Sprite("data/resume_text.bmp", RGB(0xff, 0x00, 0xff));
+		resumeText->mPosition = oldPos;
+		resumeText->mVelocity = Vec2(0, 0);
+		resumeText->setBackBuffer(BF);
 		break;
 
 	case CHOICE::LOAD:
 		oldPos = loadText->mPosition;
 		delete loadText;
 		loadText = (sel) ? new Sprite("data/loadgameselected_text.bmp", RGB(0xff, 0x00, 0xff)) :
-			new Sprite("data/menu_options/loadgame_text.bmp", RGB(0xff, 0x00, 0xff));
+			new Sprite("data/loadgame_text.bmp", RGB(0xff, 0x00, 0xff));
 		loadText->mPosition = oldPos;
 		loadText->mVelocity = Vec2(0, 0);
 		loadText->setBackBuffer(BF);
+		break;
+
+	case CHOICE::EXIT:
+		oldPos = exitText2->mPosition;
+		delete exitText2;
+		exitText2 = (sel) ? new Sprite("data/exitselected_text.bmp", RGB(0xff, 0x00, 0xff)) :
+			new Sprite("data/exit_text.bmp", RGB(0xff, 0x00, 0xff));
+		exitText2->mPosition = oldPos;
+		exitText2->mVelocity = Vec2(0, 0);
+		exitText2->setBackBuffer(BF);
+
+		oldPos = exitText1->mPosition;
+		delete exitText1;
+		exitText1 = (sel) ? new Sprite("data/exitselected_text.bmp", RGB(0xff, 0x00, 0xff)) :
+			new Sprite("data/exit_text.bmp", RGB(0xff, 0x00, 0xff));
+		exitText1->mPosition = oldPos;
+		exitText1->mVelocity = Vec2(0, 0);
+		exitText1->setBackBuffer(BF);
 		break;
 
 	case CHOICE::SAVE:
 		oldPos = saveText->mPosition;
 		delete saveText;
 		saveText = (sel) ? new Sprite("data/savegameselected_text.bmp", RGB(0xff, 0x00, 0xff)) :
-			new Sprite("data/menu_options/savegame_text.bmp", RGB(0xff, 0x00, 0xff));
+			new Sprite("data/savegame_text.bmp", RGB(0xff, 0x00, 0xff));
 		saveText->mPosition = oldPos;
 		saveText->mVelocity = Vec2(0, 0);
 		saveText->setBackBuffer(BF);
-		break;
-
-	case CHOICE::EXIT:
-		oldPos = exitText->mPosition;
-		delete exitText;
-		exitText = (sel) ? new Sprite("data/exitselected_text.bmp", RGB(0xff, 0x00, 0xff)) :
-			new Sprite("data/exit_text.bmp", RGB(0xff, 0x00, 0xff));
-		exitText->mPosition = oldPos;
-		exitText->mVelocity = Vec2(0, 0);
-		exitText->setBackBuffer(BF);
 		break;
 	}
 }

@@ -1,17 +1,14 @@
 ﻿cl : Command line warning D9035: option 'Gm' has been deprecated and will be removed in a future release
-  MenuSprite.cpp
   CGameApp.cpp
 e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(95): warning C4244: 'initializing': conversion from 'LONG' to 'USHORT', possible loss of data
 e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(96): warning C4244: 'initializing': conversion from 'LONG' to 'USHORT', possible loss of data
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(585): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(871): warning C4101: 'y': unreferenced local variable
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(871): warning C4101: 'i': unreferenced local variable
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(871): warning C4101: 'x': unreferenced local variable
+e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(640): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(929): warning C4101: 'y': unreferenced local variable
+e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(929): warning C4101: 'i': unreferenced local variable
+e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(929): warning C4101: 'x': unreferenced local variable
   Generating Code...
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(674): warning C4700: uninitialized local variable 'timeVelocityLocal' used
-  Compiling...
+e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(729): warning C4700: uninitialized local variable 'timeVelocityLocal' used
+  Skipping... (no relevant changes detected)
   Main.cpp
   CPlayer.cpp
-  Generating Code...
-BackBuffer.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/SAFESEH' specification
   Game.vcxproj -> E:\Documents\AUTOMATICA\Anul II\Semestrul II\Computer Graphics\Project\Roadie\d_Game.exe
