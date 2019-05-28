@@ -29,6 +29,7 @@ CPlayer::CPlayer(const BackBuffer *pBackBuffer,const char* path) : rotateDirecti
 	doublerPowerUp = 0;
 	invincibility = 0;
 	gunPowerUp = 0;
+	shield = 0;
 
 	m_pSprite->setBackBuffer(pBackBuffer);
 
@@ -74,7 +75,7 @@ void CPlayer::Update(float dt)
 	m_fTimer += dt;
 
 	// A FSM is used for sound manager 
-	switch(m_eSpeedState)
+	/*switch(m_eSpeedState)
 	{
 	case SPEED_STOP:
 		if(v > 35.0f)
@@ -98,7 +99,7 @@ void CPlayer::Update(float dt)
 				m_fTimer = 0;
 			}
 		break;
-	}
+	}*/
 
 	// NOTE: For sound you also can use MIDI but it's Win32 API it is a bit hard
 	// see msdn reference: http://msdn.microsoft.com/en-us/library/ms711640.aspx
@@ -182,7 +183,6 @@ void CPlayer::Explode()
 	m_pExplosionSprite->mPosition = m_pSprite->mPosition;
 	m_pSprite->mVelocity.x = 0;
 	m_pSprite->mVelocity.y = 0;
-	PlaySound("data/explosion.wav", NULL, SND_FILENAME | SND_ASYNC);
 	m_bExplosion = true;
 }
 

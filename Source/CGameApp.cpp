@@ -23,6 +23,9 @@ bool		okLoad = 0;
 static UINT fTimer;
 int			incrementScore = 0;
 int			powerUp = 0;
+int			powerUpShield = 0;
+int			powerUpGun = 0;
+int			powerUpDouble = 0;
 
 //-----------------------------------------------------------------------------
 // CGameApp Member Functions
@@ -51,6 +54,12 @@ CGameApp::CGameApp()
 	m_level4Text	= NULL;
 	m_level5Text	= NULL;
 	m_LastFrameRate = 0;
+	shootText		= NULL;
+	doubleText		= NULL;
+	shieldText		= NULL;
+	shootTextSel	= NULL;
+	doubleTextSel	= NULL;
+	shieldTextSel	= NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -344,6 +353,24 @@ bool CGameApp::BuildObjects()
 	m_level3Text->setBackBuffer(m_pBBuffer);
 	m_level4Text->setBackBuffer(m_pBBuffer);
 	m_level5Text->setBackBuffer(m_pBBuffer);
+
+	shootText = new Sprite("data/shoot_text.bmp", RGB(0xff, 0x00, 0xff));
+	shootText->setBackBuffer(m_pBBuffer);
+
+	shieldText = new Sprite("data/shield_text.bmp", RGB(0xff, 0x00, 0xff));
+	shieldText->setBackBuffer(m_pBBuffer);
+
+	doubleText = new Sprite("data/doublepoints_text.bmp", RGB(0xff, 0x00, 0xff));
+	doubleText->setBackBuffer(m_pBBuffer);
+
+	shootTextSel = new Sprite("data/shootsel_text.bmp", RGB(0xff, 0x00, 0xff));
+	shootTextSel->setBackBuffer(m_pBBuffer);
+
+	shieldTextSel = new Sprite("data/shieldsel_text.bmp", RGB(0xff, 0x00, 0xff));
+	shieldTextSel->setBackBuffer(m_pBBuffer);
+
+	doubleTextSel = new Sprite("data/doublepointssel_text.bmp", RGB(0xff, 0x00, 0xff));
+	doubleTextSel->setBackBuffer(m_pBBuffer);
 	
 	livesText->setBackBuffer(m_pBBuffer);
 	scoreText->setBackBuffer(m_pBBuffer);
@@ -378,6 +405,14 @@ void CGameApp::SetupGameState()
 	m_level3Text->mPosition = Vec2(80, 230);
 	m_level4Text->mPosition = Vec2(80, 230);
 	m_level5Text->mPosition = Vec2(80, 230);
+
+	shootText->mPosition = Vec2(75, 330);
+	shieldText->mPosition = Vec2(75, 280);
+	doubleText->mPosition = Vec2(80, 400);
+
+	shootTextSel->mPosition = Vec2(75, 330);
+	shieldTextSel->mPosition = Vec2(75, 280);
+	doubleTextSel->mPosition = Vec2(80, 400);
 
 	m_wonSprite->mPosition = Vec2(int(m_screenSize.x / 2), int(m_screenSize.y / 2));
 	m_lostSprite->mPosition = Vec2(int(m_screenSize.x / 2), int(m_screenSize.y / 2));
@@ -482,6 +517,42 @@ void CGameApp::ReleaseObjects( )
 	{
 		delete shieldPower;
 		shieldPower = NULL;
+	}
+
+	if (shootText != NULL)
+	{
+		delete shootText;
+		shootText = NULL;
+	}
+
+	if (shieldText != NULL)
+	{
+		delete shieldText;
+		shieldText = NULL;
+	}
+
+	if (doubleText != NULL)
+	{
+		delete doubleText;
+		doubleText = NULL;
+	}
+
+	if (shootTextSel != NULL)
+	{
+		delete shootTextSel;
+		shootTextSel = NULL;
+	}
+
+	if (shieldTextSel != NULL)
+	{
+		delete shieldTextSel;
+		shieldTextSel = NULL;
+	}
+
+	if (doubleTextSel != NULL)
+	{
+		delete doubleTextSel;
+		doubleTextSel = NULL;
 	}
 
 	while (!m_enemies.empty()) delete m_enemies.front(), m_enemies.pop_front();
@@ -629,14 +700,14 @@ void CGameApp::AnimateObjects()
 			{
 				if (m_pPlayer->doublerPowerUp)
 				{
-					powerUp++;
+					powerUpDouble++;
 					incrementScore ++;
 					if (incrementScore % 2 == 0)
 						m_scoreP1->updateScore(1);
-					if (powerUp == 250)
+					if (powerUpDouble == 300)
 					{
 						m_pPlayer->doublerPowerUp = 0;
-						powerUp = 0;
+						powerUpDouble = 0;
 					}
 						
 				}
@@ -659,11 +730,21 @@ void CGameApp::AnimateObjects()
 
 				if (m_pPlayer->gunPowerUp == 1)
 				{
-					powerUp++;
-					if (powerUp == 300)
+					powerUpGun++;
+					if (powerUpGun == 300)
 					{
-						powerUp = 0;
+						powerUpGun = 0;
 						m_pPlayer->gunPowerUp = 0;
+					}
+				}
+
+				if (m_pPlayer->shield == 1)
+				{
+					powerUpShield++;
+					if (powerUpShield == 300)
+					{
+						powerUpShield = 0;
+						m_pPlayer->shield = 0;
 					}
 				}
 			}
@@ -676,7 +757,7 @@ void CGameApp::AnimateObjects()
 		{
 			enem->Update(m_Timer.GetTimeElapsed());
 
-			if (enem->Position().y + (enem->getSize().y / 2) >= GetSystemMetrics(SM_CYSCREEN) - 75)
+			if (enem->Position().y + (enem->getSize().y / 2) >= GetSystemMetrics(SM_CYSCREEN) + 350)
 			{
 				enem->isDead = 1;
 			}
@@ -708,7 +789,7 @@ void CGameApp::AnimateObjects()
 
 		if (powerUpCollision(shieldPower, m_pPlayer))
 		{
-			m_pPlayer->invincibility = 1;
+			m_pPlayer->shield = 1;
 		}
 
 		if (powerUpCollision(gunPower, m_pPlayer))
@@ -783,6 +864,15 @@ void CGameApp::DrawObjects()
 		if(!gunPower->deleted) gunPower->draw();
 		if(!doublerPower->deleted) doublerPower->draw();
 
+		if (!m_pPlayer->gunPowerUp) shootText->draw();
+		else shootTextSel->draw();
+		
+		if (!m_pPlayer->shield) shieldText->draw();
+		else shieldTextSel->draw();
+		
+		if (!m_pPlayer->doublerPowerUp) doubleText->draw();
+		else doubleTextSel->draw();
+
 		switch (m_levels)
 		{
 		case Levels::LEVEL1:
@@ -823,9 +913,32 @@ void CGameApp::DrawObjects()
 		}
 		break;
 	case GameState::PAUSE:
+		livesText->draw();
+		scoreText->draw();
 		m_scoreP1->draw();
 		for (auto lg : m_livesGreen) lg->draw();
-		m_level1Text->draw();
+		switch (m_levels)
+		{
+		case Levels::LEVEL1:
+			m_level1Text->draw();
+			break;
+
+		case Levels::LEVEL2:
+			m_level2Text->draw();
+			break;
+
+		case Levels::LEVEL3:
+			m_level3Text->draw();
+			break;
+
+		case Levels::LEVEL4:
+			m_level4Text->draw();
+			break;
+
+		case Levels::LEVEL5:
+			m_level5Text->draw();
+			break;
+		}
 		break;
 	default:
 		break;
@@ -980,6 +1093,7 @@ bool CGameApp::Collision()
 								m_pPlayer->Position() = Vec2(690, 600);
 								m_pPlayer->Velocity() = Vec2(0, 0);
 								enem->Explode();
+								PlaySound("data/explosion.wav", NULL, SND_FILENAME | SND_ASYNC);
 								return true;
 							}
 						}
@@ -995,6 +1109,7 @@ bool CGameApp::detectBulletCollision(const Sprite* bullet)
 	{
 		if (bulletCollision(*bullet, *enem))
 		{
+			m_scoreP1->updateScore(100);
 			fTimer = SetTimer(m_hWnd, 1, 70, NULL);
 			enem->Explode();
 			return true;

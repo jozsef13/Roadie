@@ -77,6 +77,7 @@ public:
 	bool					doublerPowerUp;
 	bool					invincibility;
 	bool					gunPowerUp;
+	bool					shield;
 	
 
 private:

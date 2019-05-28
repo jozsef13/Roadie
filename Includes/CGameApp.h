@@ -149,6 +149,13 @@ private:
 	Sprite*						livesText;
 	Sprite*						scoreText;
 
+	Sprite*						shootText;
+	Sprite*						doubleText;
+	Sprite*						shieldText;
+	Sprite*						shootTextSel;
+	Sprite*						doubleTextSel;
+	Sprite*						shieldTextSel;
+
 	Sprite*						doublerPower;
 	Sprite*						addLivePower;
 	Sprite*						gunPower;
