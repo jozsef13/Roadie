@@ -31,6 +31,7 @@ public:
 	Vec2 mVelocity;
 	int frameCounter;
 	int team;
+	bool deleted;
 
 private:
 	// Make copy constructor and assignment operator private

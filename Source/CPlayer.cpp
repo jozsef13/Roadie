@@ -26,6 +26,9 @@ CPlayer::CPlayer(const BackBuffer *pBackBuffer,const char* path) : rotateDirecti
 	m_eSpeedState = SPEED_STOP;
 	m_fTimer = 0;
 	isDead = false;
+	doublerPowerUp = 0;
+	invincibility = 0;
+	gunPowerUp = 0;
 
 	m_pSprite->setBackBuffer(pBackBuffer);
 
@@ -233,4 +236,34 @@ bool CPlayer::hasExploded()
 
 void CPlayer::SetPosition(Vec2 currentPosition) {
 	m_pSprite->mPosition = currentPosition;
+}
+
+void CPlayer::Rotate()
+{
+	auto position = m_pSprite->mPosition;
+	auto velocity = m_pSprite->mVelocity;
+
+	switch (rotateDirection)
+	{
+	case CPlayer::DIR_FORWARD:
+		m_pSprite = new Sprite("data/car4r.bmp", RGB(0xff, 0x00, 0xff));
+		rotateDirection = CPlayer::DIR_LEFT;
+		break;
+	case CPlayer::DIR_BACKWARD:
+		m_pSprite = new Sprite("data/car4rrr.bmp", RGB(0xff, 0x00, 0xff));
+		rotateDirection = CPlayer::DIR_RIGHT;
+		break;
+	case CPlayer::DIR_LEFT:
+		rotateDirection = CPlayer::DIR_BACKWARD;
+		m_pSprite = new Sprite("data/car4rr.bmp", RGB(0xff, 0x00, 0xff));
+		break;
+	case CPlayer::DIR_RIGHT:
+		rotateDirection = CPlayer::DIR_FORWARD;
+		m_pSprite = new Sprite("data/car4.bmp", RGB(0xff, 0x00, 0xff));
+		break;
+	}
+
+	m_pSprite->mPosition = position;
+	m_pSprite->mVelocity = velocity;
+	m_pSprite->setBackBuffer(g_App.m_pBBuffer);
 }

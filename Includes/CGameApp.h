@@ -84,16 +84,15 @@ private:
 	void		removeDead();
 	bool		Collision();
 	bool		bulletCollision(const Sprite& bullet, CPlayer& p1);
-	void		fireBullet(const Vec2 position, const Vec2 velocity, int x);
+	void		fireBullet(const Vec2 position, const Vec2 velocity);
 	bool		detectBulletCollision(const Sprite* bullet);
-	void		enemyFire();
-	void		EnemyMove();
 	void		setPLives(int livesP1);
 	void		updateGameState();
 	void		scrollingBackground(int speed);
 	void		saveGame();
 	void		loadGame();
-	void		updateLevelState();
+	void		addPowerUp(int powerUp);
+	bool		powerUpCollision(Sprite* powerUp, CPlayer* p1);
 
 	
 	//-------------------------------------------------------------------------
@@ -126,16 +125,16 @@ private:
 	CImageFile				m_imgBackgroundMenu;
 
 	CPlayer*				m_pPlayer;
-	std::list<CPlayer*>		m_enemies;
+	list<CPlayer*>			m_enemies;
 
-	std::list<Sprite*>		m_livesGreen;		// Lives for green player
+	list<Sprite*>			m_livesGreen;		// Lives for green player
 
 	ScoreSprite*			m_scoreP1;			// Score for the player 1
 
-	std::list<Sprite*>		bullets;
+	list<Sprite*>			bullets;
 	int						frameCounter = 0;
 
-	std::list<Sprite*>			p1Life;
+	list<Sprite*>				p1Life;
 
 	GameState					m_gameState;			// Game state (ongoing, won, lost)
 	Levels						m_levels;
@@ -149,6 +148,11 @@ private:
 
 	Sprite*						livesText;
 	Sprite*						scoreText;
+
+	Sprite*						doublerPower;
+	Sprite*						addLivePower;
+	Sprite*						gunPower;
+	Sprite*						shieldPower;
 
 	MenuSprite*					gameMenu;
 	string						levelForSave;

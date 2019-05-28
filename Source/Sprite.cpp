@@ -53,6 +53,7 @@ Sprite::Sprite(const char *szImageFile, COLORREF crTransparentColor)
 	frameCounter = 0;
 
 	team = 1;
+	deleted = 0;
 }
 
 Sprite::~Sprite()

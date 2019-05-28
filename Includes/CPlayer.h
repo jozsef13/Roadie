@@ -66,17 +66,17 @@ public:
 	void					Explode();
 	bool					AdvanceExplosion();
 
-	void					EnemyExplode();
-	bool					EnemyAdvanceExplosion();
 	void					takeDamage();
 	int						getLives();
 	void					setLives(int noLives);
 	bool					hasExploded();
-	bool					enemyHasExploded();
-	void					Rotate(int x);
+	void					Rotate();
 	bool					isDead;
 	void					SetPosition(Vec2 currentPosition);
 	int						speed;
+	bool					doublerPowerUp;
+	bool					invincibility;
+	bool					gunPowerUp;
 	
 
 private:

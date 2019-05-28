@@ -22,6 +22,7 @@ int			frameCounter = 0;
 bool		okLoad = 0;
 static UINT fTimer;
 int			incrementScore = 0;
+int			powerUp = 0;
 
 //-----------------------------------------------------------------------------
 // CGameApp Member Functions
@@ -282,6 +283,9 @@ LRESULT CGameApp::DisplayWndProc( HWND hWnd, UINT Message, WPARAM wParam, LPARAM
 				else if (m_gameState == GameState::WON) m_gameState = GameState::START;
 				else PostQuitMessage(0);
 				break;
+			case 'R':
+				m_pPlayer->Rotate();
+				break;
 			}
 			break;
 
@@ -343,6 +347,8 @@ bool CGameApp::BuildObjects()
 	
 	livesText->setBackBuffer(m_pBBuffer);
 	scoreText->setBackBuffer(m_pBBuffer);
+
+	addPowerUp(powerUp);
 	setPLives(3);
 
 	if(!m_imgBackground.LoadBitmapFromFile("data/Background.bmp", GetDC(m_hWnd)))
@@ -454,8 +460,32 @@ void CGameApp::ReleaseObjects( )
 		gameMenu = NULL;
 	}
 
+	if (doublerPower != NULL)
+	{
+		delete doublerPower;
+		doublerPower = NULL;
+	}
+	
+	if (addLivePower != NULL)
+	{
+		delete addLivePower;
+		addLivePower = NULL;
+	}
+
+	if (gunPower != NULL)
+	{
+		delete gunPower;
+		gunPower = NULL;
+	}
+
+	if (shieldPower != NULL)
+	{
+		delete shieldPower;
+		shieldPower = NULL;
+	}
+
 	while (!m_enemies.empty()) delete m_enemies.front(), m_enemies.pop_front();
-	//while (!bullets.empty()) delete bullets.front(), bullets.pop_front();
+	while (!bullets.empty()) delete bullets.front(), bullets.pop_front();
 	while (!m_livesGreen.empty()) delete m_livesGreen.front(), m_livesGreen.pop_front();
 
 	if (m_pBBuffer != NULL)
@@ -556,11 +586,11 @@ void CGameApp::ProcessInput( )
 		if (pKeyBuffer[VK_LEFT] & 0xF0) Direction |= CPlayer::DIR_LEFT;
 		if (pKeyBuffer[VK_RIGHT] & 0xF0) Direction |= CPlayer::DIR_RIGHT;
 
-		/*if (pKeyBuffer[VK_SPACE] & 0xF0 && m_pPlayer->frameCounter() >= 20)
+		if (pKeyBuffer[VK_SPACE] & 0xF0 && m_pPlayer->frameCounter() >= 20 && m_pPlayer->gunPowerUp == 1)
 		{
-			fireBullet(m_pPlayer->Position(), Vec2(0, -250), 1);
+			fireBullet(m_pPlayer->Position(), Vec2(0, -250));
 			m_pPlayer->frameCounter() = 0;
-		}*/
+		}
 	}
 	
 	// Move the player
@@ -593,14 +623,49 @@ void CGameApp::AnimateObjects()
 	switch (m_gameState)
 	{
 	case GameState::ONGOING:
-		
 		if (!m_pPlayer->isDead)
 		{
 			if (!m_pPlayer->hasExploded())
 			{
-				incrementScore++;
-				if(incrementScore % 25 == 0)
-					m_scoreP1->updateScore(1);
+				if (m_pPlayer->doublerPowerUp)
+				{
+					powerUp++;
+					incrementScore ++;
+					if (incrementScore % 2 == 0)
+						m_scoreP1->updateScore(1);
+					if (powerUp == 250)
+					{
+						m_pPlayer->doublerPowerUp = 0;
+						powerUp = 0;
+					}
+						
+				}
+				else
+				{
+					incrementScore++;
+					if (incrementScore % 10 == 0)
+						m_scoreP1->updateScore(1);
+				}
+
+				if (m_pPlayer->invincibility == 1)
+				{
+					powerUp++;
+					if (powerUp == 300)
+					{
+						powerUp = 0;
+						m_pPlayer->invincibility = 0;
+					}
+				}
+
+				if (m_pPlayer->gunPowerUp == 1)
+				{
+					powerUp++;
+					if (powerUp == 300)
+					{
+						powerUp = 0;
+						m_pPlayer->gunPowerUp = 0;
+					}
+				}
 			}
 			
 			m_pPlayer->Update(m_Timer.GetTimeElapsed());
@@ -616,13 +681,42 @@ void CGameApp::AnimateObjects()
 				enem->isDead = 1;
 			}
 		}
-		
+
 		if (Collision())
 		{
 			m_scoreP1->updateScore(-100);
+			m_pPlayer->invincibility = 1;
 		}
 
-		/*for (auto bul : bullets)
+		addLivePower->update(m_Timer.GetTimeElapsed());
+		shieldPower->update(m_Timer.GetTimeElapsed());
+		gunPower->update(m_Timer.GetTimeElapsed());
+		doublerPower->update(m_Timer.GetTimeElapsed());
+
+		if (powerUpCollision(addLivePower, m_pPlayer))
+		{
+			if (m_pPlayer->getLives() < 3)
+			{
+				setPLives(m_pPlayer->getLives() + 1);
+			}
+		}
+
+		if (powerUpCollision(doublerPower, m_pPlayer))
+		{
+			m_pPlayer->doublerPowerUp = 1;
+		}
+
+		if (powerUpCollision(shieldPower, m_pPlayer))
+		{
+			m_pPlayer->invincibility = 1;
+		}
+
+		if (powerUpCollision(gunPower, m_pPlayer))
+		{
+			m_pPlayer->gunPowerUp = 1;
+		}
+
+		for (auto bul : bullets)
 		{
 			bul->update(m_Timer.GetTimeElapsed());
 
@@ -631,7 +725,7 @@ void CGameApp::AnimateObjects()
 				bullets.remove(bul);
 				break;
 			}
-		}*/
+		}
 
 		break;
 	
@@ -674,20 +768,24 @@ void CGameApp::DrawObjects()
 
 		for (auto lg : m_livesGreen) lg->draw();
 
-		/*for (auto bul : bullets)
+		for (auto bul : bullets)
 		{
 			bul->draw();
-		}*/
+		}
 
 		for (auto enem : m_enemies)
 		{
 			enem->Draw();
 		}
 
+		if(!addLivePower->deleted) addLivePower->draw();
+		if(!shieldPower->deleted) shieldPower->draw();
+		if(!gunPower->deleted) gunPower->draw();
+		if(!doublerPower->deleted) doublerPower->draw();
+
 		switch (m_levels)
 		{
 		case Levels::LEVEL1:
-			
 			m_level1Text->draw();
 			break;
 			
@@ -804,14 +902,18 @@ void CGameApp::addEnemies(int nrEnemies, int timeVelocity, int velocity)
 			{
 				if (auxPositionY[j] > auxPositionY[i + 1])
 				{
-					if (auxPositionY[j] - auxPositionY[i + 1] > 240) 
+					if (auxPositionY[j] - auxPositionY[i + 1] > 240)
+					{
 						okPos = 1;
+					}	
 				}
 				
 				if (auxPositionY[j] < auxPositionY[i + 1])
 				{
-					if (auxPositionY[j] - auxPositionY[i + 1] < -240) 
+					if (auxPositionY[j] - auxPositionY[i + 1] < -240)
+					{
 						okPos = 1;
+					}
 				}
 
 				if (okPos == 0)
@@ -862,74 +964,39 @@ bool CGameApp::Collision()
 {
 	for (auto enem : m_enemies)
 	{
-		if(m_pPlayer->Position().x + (m_pPlayer->getSize().x/2) > enem->Position().x - (enem->getSize().x / 2))
-			if(m_pPlayer->Position().x - (m_pPlayer->getSize().x / 2) < enem->Position().x + (enem->getSize().x / 2))
-				if(m_pPlayer->Position().y + (m_pPlayer->getSize().y/2) > enem->Position().y - (enem->getSize().y/2))
-					if (m_pPlayer->Position().y - (m_pPlayer->getSize().y / 2) < enem->Position().y + (enem->getSize().y / 2))
-					{
-						if (!m_pPlayer->hasExploded() && m_livesGreen.size() > 0)
+		if (!m_pPlayer->invincibility)
+		{
+			if (m_pPlayer->Position().x + (m_pPlayer->getSize().x / 2) > enem->Position().x - (enem->getSize().x / 2))
+				if (m_pPlayer->Position().x - (m_pPlayer->getSize().x / 2) < enem->Position().x + (enem->getSize().x / 2))
+					if (m_pPlayer->Position().y + (m_pPlayer->getSize().y / 2) > enem->Position().y - (enem->getSize().y / 2))
+						if (m_pPlayer->Position().y - (m_pPlayer->getSize().y / 2) < enem->Position().y + (enem->getSize().y / 2))
 						{
-							fTimer = SetTimer(m_hWnd, 1, 70, NULL);
-							m_pPlayer->takeDamage();
-							delete m_livesGreen.back();
-							m_livesGreen.pop_back();
-							m_pPlayer->Position() = Vec2(690, 600);
-							m_pPlayer->Velocity() = Vec2(0, 0);
-							enem->Explode();
-							return true;
+							if (!m_pPlayer->hasExploded() && m_livesGreen.size() > 0)
+							{
+								fTimer = SetTimer(m_hWnd, 1, 70, NULL);
+								m_pPlayer->takeDamage();
+								delete m_livesGreen.back();
+								m_livesGreen.pop_back();
+								m_pPlayer->Position() = Vec2(690, 600);
+								m_pPlayer->Velocity() = Vec2(0, 0);
+								enem->Explode();
+								return true;
+							}
 						}
-					}
+		}
 	}
 
 	return false;
 }
 
-/*bool CGameApp::detectBulletCollision(const Sprite* bullet)
+bool CGameApp::detectBulletCollision(const Sprite* bullet)
 {
-
-	if (bulletCollision(*bullet, *m_pPlayer) && bullet->team == 2 && !m_pPlayer->hasExploded() && m_livesGreen.size() > 0)
-	{
-		m_pPlayer->takeDamage();
-		
-		delete m_livesGreen.back();
-		m_livesGreen.pop_back();
-		
-		return true;
-	}
-
-	if (bulletCollision(*bullet, *m_pPlayer2) && bullet->team == 1 && !m_pPlayer2->hasExploded() && m_livesRed.size() > 0)
-	{
-		m_pPlayer2->takeDamage();
-		
-		delete m_livesRed.back();
-		m_livesRed.pop_back();
-		
-		return true;
-	}
-
 	for (auto enem : m_enemies)
 	{
-		if (bulletCollision(*bullet, *enem) && bullet->team != 3)
+		if (bulletCollision(*bullet, *enem))
 		{
-			if (enem->enemyHasExploded())
-			{
-				return false;
-			}
-			
-			if (bullet->team == 1)
-			{
-				m_scoreP1->updateScore(100);
-			}
-			else if (bullet->team == 2)
-			{
-				m_scoreP2->updateScore(100);
-			}
-			else
-			{
-				return false;
-			}
 			fTimer = SetTimer(m_hWnd, 1, 70, NULL);
-			enem->EnemyExplode();
+			enem->Explode();
 			return true;
 		}
 	}
@@ -949,25 +1016,14 @@ bool CGameApp::bulletCollision(const Sprite& bullet, CPlayer& p1)
 
 }
 
-void CGameApp::fireBullet(const Vec2 position, const Vec2 velocity, int x)
+void CGameApp::fireBullet(const Vec2 position, const Vec2 velocity)
 {
-	if (x == 1)
-	{
-		bullets.push_back(new Sprite("data/bullet.bmp", RGB(0xff, 0x00, 0xff)));
-	}
-	else if (x == 2)
-	{
-		bullets.push_back(new Sprite("data/bulletr.bmp", RGB(0xff, 0x00, 0xff)));
-	}
-	else
-	{
-		bullets.push_back(new Sprite("data/bulletaliens.bmp", RGB(0xff, 0x00, 0xff)));
-	}
+
+	bullets.push_back(new Sprite("data/bullet.bmp", RGB(0xff, 0x00, 0xff)));
 
 	bullets.back()->setBackBuffer(m_pBBuffer);
 	bullets.back()->mPosition = position;
 	bullets.back()->mVelocity = velocity;
-	bullets.back()->team = x;
 
 
 	if (velocity.y < 0)
@@ -979,20 +1035,6 @@ void CGameApp::fireBullet(const Vec2 position, const Vec2 velocity, int x)
 		bullets.back()->mPosition.y += 75;
 	}
 }
-
-void CGameApp::enemyFire()
-{
-	srand(time(NULL));
-
-	for (auto enem : m_enemies)
-	{
-		if (enem->frameCounter() == 1500)
-		{
-			enem->frameCounter() = rand() % 1000;
-			fireBullet(enem->Position(), Vec2(0, 100), 3);
-		}
-	}
-}*/
 
 void CGameApp::setPLives(int livesP1)
 {
@@ -1024,6 +1066,7 @@ void CGameApp::updateGameState()
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL1)
 	{
 		addEnemies(25, 3, 70);
+		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
 		m_levels = LEVEL2;
@@ -1033,6 +1076,7 @@ void CGameApp::updateGameState()
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL2)
 	{
 		addEnemies(28, 3, 75);
+		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
 		m_levels = LEVEL3;
@@ -1042,6 +1086,7 @@ void CGameApp::updateGameState()
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL3)
 	{
 		addEnemies(30, 3, 75);
+		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
 		m_levels = LEVEL4;
@@ -1051,6 +1096,7 @@ void CGameApp::updateGameState()
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL4)
 	{
 		addEnemies(35, 4, 80);
+		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
 		m_levels = LEVEL5;
@@ -1113,7 +1159,7 @@ void CGameApp::loadGame()
 {
 	std::ifstream save("savegame/savegame.save");
 	while (m_enemies.size()) delete m_enemies.back(), m_enemies.pop_back();
-	//while (_bullets.size()) delete _bullets.back(), _bullets.pop_back();
+	while (bullets.size()) delete bullets.back(), bullets.pop_back();
 	while (m_livesGreen.size()) delete m_livesGreen.back(), m_livesGreen.pop_back();
 
 	double cdx, cdy;
@@ -1152,4 +1198,103 @@ void CGameApp::loadGame()
 	{
 		m_levels = Levels::LEVEL5;
 	}
+}
+
+void CGameApp::addPowerUp(int powerUp)
+{
+	int positionX, ok, iProv = 0, auxPositionY1 = 0, auxPositionY2 = 0, positionY = 0;
+	srand(time(NULL));
+
+	doublerPower = new Sprite("data/doubler.bmp", RGB(0xff, 0x00, 0xff));
+	doublerPower->setBackBuffer(m_pBBuffer);
+	addLivePower = new Sprite("data/heart.bmp", RGB(0xff, 0x00, 0xff));
+	addLivePower->setBackBuffer(m_pBBuffer);
+	gunPower = new Sprite("data/gun.bmp", RGB(0xff, 0x00, 0xff));
+	gunPower->setBackBuffer(m_pBBuffer);
+	shieldPower = new Sprite("data/shield.bmp", RGB(0xff, 0x00, 0xff));
+	shieldPower->setBackBuffer(m_pBBuffer);
+
+	positionX = 10;
+	ok = 0;
+	while (ok == 0)
+	{
+		positionX = rand() % GetSystemMetrics(SM_CXSCREEN);
+		//banda 1
+		if (positionX == 290 && ok == 0)
+			ok = 1;
+
+		//banda 2
+		if (positionX == 490 && ok == 0)
+			ok = 1;
+
+		//banda 3
+		if (positionX == 690 && ok == 0)
+			ok = 1;
+
+		//banda 4
+		if (positionX == 890 && ok == 0)
+			ok = 1;
+
+
+		//banda 5
+		if (positionX == 1110 && ok == 0)
+			ok = 1;
+
+		//banda 6
+		if (positionX == (GetSystemMetrics(SM_CXSCREEN) - 230) && ok == 0)
+			ok = 1;
+			
+	}
+
+	//add live power up
+	auxPositionY1 = rand() % 10000 + 100;
+	positionY = auxPositionY1 - (2 * auxPositionY1);
+
+	addLivePower->mPosition = Vec2(positionX, positionY);
+	addLivePower->mVelocity = Vec2(0, 40);
+	
+	//shield power up - invincibility
+	auxPositionY2 = rand() % 10000 + 100;
+	while (auxPositionY2 == auxPositionY1)
+		auxPositionY2 = rand() % 10000 + 100;
+	positionY = auxPositionY2 - (2 * auxPositionY2);
+	auxPositionY1 = auxPositionY2;
+
+	shieldPower->mPosition = Vec2(positionX, positionY);
+	shieldPower->mVelocity = Vec2(0, 40);
+
+	//gun power up - you can shoot
+	auxPositionY2 = rand() % 10000 + 100;
+	while (auxPositionY2 == auxPositionY1)
+		auxPositionY2 = rand() % 10000 + 100;
+	positionY = auxPositionY2 - (2 * auxPositionY2);
+	auxPositionY1 = auxPositionY2;
+
+	gunPower->mPosition = Vec2(positionX, positionY);
+	gunPower->mVelocity = Vec2(0, 40);
+
+	//doubler power up - double your points
+	auxPositionY2 = rand() % 10000 + 100;
+	while (auxPositionY2 == auxPositionY1)
+		auxPositionY2 = rand() % 10000 + 100;
+	positionY = auxPositionY2 - (2 * auxPositionY2);
+
+	doublerPower->mPosition = Vec2(positionX, positionY);
+	doublerPower->mVelocity = Vec2(0, 40);
+}
+
+bool CGameApp::powerUpCollision(Sprite* powerUp, CPlayer* p1)
+{
+	if (powerUp->mPosition.x >= p1->Position().x - (p1->getSize().x / 2))
+		if (powerUp->mPosition.x <= p1->Position().x + (p1->getSize().x / 2))
+			if (powerUp->mPosition.y >= p1->Position().y - (p1->getSize().y / 2))
+				if (powerUp->mPosition.y <= p1->Position().y + (p1->getSize().y / 2))
+				{
+					powerUp->deleted = 1;
+					return true;
+				}
+					
+
+	return false;
+
 }
