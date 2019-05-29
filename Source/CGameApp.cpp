@@ -1263,7 +1263,6 @@ void CGameApp::updateGameState()
 	}
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL4)
 	{
-		addEnemies(35, 4, 80);
 		mciSendString("play data/sounds/finishLevel.wav", NULL, 0, NULL);
 		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);

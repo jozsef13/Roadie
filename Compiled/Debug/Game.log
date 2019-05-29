@@ -1,4 +1,4 @@
-﻿cl : Command line warning D9035: option 'Gm' has been deprecated and will be removed in a future release
+cl : Command line warning D9035: option 'Gm' has been deprecated and will be removed in a future release
   CGameApp.cpp
 e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(113): warning C4244: 'initializing': conversion from 'LONG' to 'USHORT', possible loss of data
 e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(114): warning C4244: 'initializing': conversion from 'LONG' to 'USHORT', possible loss of data
