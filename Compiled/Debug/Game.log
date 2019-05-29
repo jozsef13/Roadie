@@ -1,11 +1,1 @@
-﻿cl : Command line warning D9035: option 'Gm' has been deprecated and will be removed in a future release
-  CGameApp.cpp
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(113): warning C4244: 'initializing': conversion from 'LONG' to 'USHORT', possible loss of data
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(114): warning C4244: 'initializing': conversion from 'LONG' to 'USHORT', possible loss of data
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(972): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(1257): warning C4101: 'y': unreferenced local variable
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(1257): warning C4101: 'i': unreferenced local variable
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(1257): warning C4101: 'x': unreferenced local variable
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(1346): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(1065): warning C4700: uninitialized local variable 'timeVelocityLocal' used
-  Game.vcxproj -> E:\Documents\AUTOMATICA\Anul II\Semestrul II\Computer Graphics\Project\Roadie\d_Game.exe
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(378,5): error MSB8020: The build tools for Visual Studio 2017 (Platform Toolset = 'v141') cannot be found. To build using the v141 build tools, please install Visual Studio 2017 build tools.  Alternatively, you may upgrade to the current Visual Studio tools by selecting the Project menu or right-click the solution, and then selecting "Retarget solution".
