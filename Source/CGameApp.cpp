@@ -22,6 +22,7 @@ int			frameCounter = 0;
 bool		okLoad = 0;
 static UINT fTimer;
 int			incrementScore = 0;
+int			incrementScore2 = 0;
 int			powerUp = 0;
 int			powerUpShield = 0;
 int			powerUpGun = 0;
@@ -43,11 +44,15 @@ CGameApp::CGameApp()
 	m_hMenu			= NULL;
 	m_pBBuffer		= NULL;
 	m_pPlayer		= NULL;
+	m_pPlayer2		= NULL;
 	m_scoreP1		= NULL;
+	m_scoreP2		= NULL;
 	m_wonSprite		= NULL;
 	m_lostSprite	= NULL;
 	livesText		= NULL;
 	scoreText		= NULL;
+	livesText2		= NULL;
+	scoreText2		= NULL;
 	gameMenu		= NULL;
 	m_level1Text	= NULL;
 	m_level2Text	= NULL;
@@ -308,6 +313,8 @@ LRESULT CGameApp::DisplayWndProc( HWND hWnd, UINT Message, WPARAM wParam, LPARAM
 			case 1:
 				if (!m_pPlayer->AdvanceExplosion()) 
 					fTimer = SetTimer(m_hWnd, 1, 70, NULL);
+				if (!m_pPlayer2->AdvanceExplosion())
+					fTimer = SetTimer(m_hWnd, 1, 70, NULL);
 				for (auto enem : m_enemies)
 				{
 					if (!enem->AdvanceExplosion())
@@ -335,9 +342,13 @@ bool CGameApp::BuildObjects()
 {
 	m_pBBuffer = new BackBuffer(m_hWnd, m_nViewWidth, m_nViewHeight);
 	m_pPlayer = new CPlayer(m_pBBuffer, "data/car4.bmp");
+	m_pPlayer2 = new CPlayer(m_pBBuffer, "data/car5.bmp");
 	m_scoreP1 = new ScoreSprite(Vec2(95, 100), m_pBBuffer);
+	m_scoreP2 = new ScoreSprite(Vec2(95, 595), m_pBBuffer);
 	livesText = new Sprite("data/lives_text.bmp", RGB(0xff, 0x00, 0xff));
 	scoreText = new Sprite("data/score_text.bmp", RGB(0xff, 0x00, 0xff));
+	livesText2 = new Sprite("data/lives_text.bmp", RGB(0xff, 0x00, 0xff));
+	scoreText2 = new Sprite("data/score_text.bmp", RGB(0xff, 0x00, 0xff));
 	m_wonSprite = new Sprite("data/winscreen.bmp", RGB(0xff, 0x00, 0xff));
 	m_lostSprite = new Sprite("data/losescreen.bmp", RGB(0xff, 0x00, 0xff));
 
@@ -379,8 +390,11 @@ bool CGameApp::BuildObjects()
 	livesText->setBackBuffer(m_pBBuffer);
 	scoreText->setBackBuffer(m_pBBuffer);
 
+	livesText2->setBackBuffer(m_pBBuffer);
+	scoreText2->setBackBuffer(m_pBBuffer);
+
 	addPowerUp(powerUp);
-	setPLives(3);
+	setPLives(3, 3);
 
 	if(!m_imgBackground.LoadBitmapFromFile("data/Background.bmp", GetDC(m_hWnd)))
 		return false;
@@ -399,20 +413,25 @@ bool CGameApp::BuildObjects()
 void CGameApp::SetupGameState()
 {
 	m_pPlayer->Position() = Vec2(690, 600);
+	m_pPlayer2->Position() = Vec2(890, 600);
 
 	m_pPlayer->frameCounter() = 250;
+	m_pPlayer2->frameCounter() = 250;
 
 	livesText->mPosition = Vec2(80, 30);
 	scoreText->mPosition = Vec2(80, 125);
+	livesText2->mPosition = Vec2(80, 525);
+	scoreText2->mPosition = Vec2(80, 620);
+
 	m_level1Text->mPosition = Vec2(80, 230);
 	m_level2Text->mPosition = Vec2(80, 230);
 	m_level3Text->mPosition = Vec2(80, 230);
 	m_level4Text->mPosition = Vec2(80, 230);
 	m_level5Text->mPosition = Vec2(80, 230);
 
-	shootText->mPosition = Vec2(75, 330);
-	shieldText->mPosition = Vec2(75, 280);
-	doubleText->mPosition = Vec2(80, 400);
+	shootText->mPosition = Vec2(75, 370);
+	shieldText->mPosition = Vec2(75, 300);
+	doubleText->mPosition = Vec2(80, 440);
 
 	shootTextSel->mPosition = Vec2(75, 330);
 	shieldTextSel->mPosition = Vec2(75, 280);
@@ -439,9 +458,20 @@ void CGameApp::ReleaseObjects( )
 		m_pPlayer = NULL;
 	}
 
+	if (m_pPlayer2 != NULL)
+	{
+		delete m_pPlayer2;
+		m_pPlayer2 = NULL;
+	}
+
 	if (m_scoreP1 != NULL) {
 		delete m_scoreP1;
 		m_scoreP1 = NULL;
+	}
+
+	if (m_scoreP2 != NULL) {
+		delete m_scoreP2;
+		m_scoreP2 = NULL;
 	}
 
 	if (m_wonSprite != NULL) {
@@ -462,6 +492,16 @@ void CGameApp::ReleaseObjects( )
 	if (scoreText != NULL) {
 		delete scoreText;
 		scoreText = NULL;
+	}
+
+	if (livesText2 != NULL) {
+		delete livesText2;
+		livesText2 = NULL;
+	}
+
+	if (scoreText2 != NULL) {
+		delete scoreText2;
+		scoreText2 = NULL;
 	}
 
 	if (m_level1Text != NULL)
@@ -562,6 +602,7 @@ void CGameApp::ReleaseObjects( )
 	while (!m_enemies.empty()) delete m_enemies.front(), m_enemies.pop_front();
 	while (!bullets.empty()) delete bullets.front(), bullets.pop_front();
 	while (!m_livesGreen.empty()) delete m_livesGreen.front(), m_livesGreen.pop_front();
+	while (!m_livesRed.empty()) delete m_livesRed.front(), m_livesRed.pop_front();
 
 	if (m_pBBuffer != NULL)
 	{
@@ -671,9 +712,25 @@ void CGameApp::ProcessInput( )
 			m_pPlayer->frameCounter() = 0;
 		}
 	}
+
+	if (!m_pPlayer2->isDead)
+	{
+		if (pKeyBuffer['W'] & 0xF0) Direction1 |= CPlayer::DIR_FORWARD;
+		if (pKeyBuffer['S'] & 0xF0) Direction1 |= CPlayer::DIR_BACKWARD;
+		if (pKeyBuffer['A'] & 0xF0) Direction1 |= CPlayer::DIR_LEFT;
+		if (pKeyBuffer['D'] & 0xF0) Direction1 |= CPlayer::DIR_RIGHT;
+
+		if (pKeyBuffer['P'] & 0xF0 && m_pPlayer2->frameCounter() >= 20 && m_pPlayer2->gunPowerUp == 1)
+		{
+			fireBullet(m_pPlayer2->Position(), Vec2(0, -250));
+			mciSendString("play data/sounds/shoot.wav", NULL, 0, NULL);
+			m_pPlayer2->frameCounter() = 0;
+		}
+	}
 	
 	// Move the player
 	m_pPlayer->Move(Direction);
+	m_pPlayer2->Move(Direction1);
 
 	// Now process the mouse (if the button is pressed)
 	if ( GetCapture() == m_hWnd )
@@ -777,6 +834,77 @@ void CGameApp::AnimateObjects()
 			m_pPlayer->frameCounter()++;
 		}
 
+		if (!m_pPlayer2->isDead)
+		{
+			if (!m_pPlayer2->hasExploded())
+			{
+				if (m_pPlayer2->doublerPowerUp)
+				{
+					powerUpDouble++;
+					incrementScore2++;
+					if (incrementScore2 % 2 == 0)
+						m_scoreP2->updateScore(1);
+
+					if (powerUpDouble == 300)
+						mciSendString("play data/sounds/timer.wav", NULL, 0, NULL);
+					if (powerUpDouble == 500)
+					{
+						m_pPlayer2->doublerPowerUp = 0;
+						powerUpDouble = 0;
+					}
+
+				}
+				else
+				{
+					incrementScore2++;
+					if (incrementScore2 % 4 == 0)
+						m_scoreP2->updateScore(1);
+				}
+
+				if (m_pPlayer2->invincibility == 1)
+				{
+					powerUp++;
+					if (powerUp == 400)
+					{
+						powerUp = 0;
+						m_pPlayer2->invincibility = 0;
+					}
+				}
+
+				if (m_pPlayer2->gunPowerUp == 1)
+				{
+					powerUpGun++;
+					if (powerUpGun == 300)
+					{
+						mciSendString("play data/sounds/timer.wav", NULL, 0, NULL);
+					}
+					if (powerUpGun == 500)
+					{
+						powerUpGun = 0;
+						m_pPlayer2->gunPowerUp = 0;
+					}
+				}
+
+				if (m_pPlayer2->shield == 1)
+				{
+					powerUpShield++;
+					if (powerUpShield == 300)
+					{
+						mciSendString("play data/sounds/timer.wav", NULL, 0, NULL);
+					}
+					if (powerUpShield == 500)
+					{
+						powerUpShield = 0;
+						m_pPlayer2->shield = 0;
+						m_pPlayer2->invincibility = 0;
+					}
+				}
+			}
+
+			m_pPlayer2->Update(m_Timer.GetTimeElapsed());
+			m_pPlayer2->frameCounter()++;
+		}
+
 		for (auto enem : m_enemies)
 		{
 			enem->Update(m_Timer.GetTimeElapsed());
@@ -787,10 +915,16 @@ void CGameApp::AnimateObjects()
 			}
 		}
 
-		if (Collision())
+		if (CollisionPlayer1())
 		{
 			m_scoreP1->updateScore(-100);
 			m_pPlayer->invincibility = 1;
+		}
+
+		if (CollisionPlayer2())
+		{
+			m_scoreP2->updateScore(-100);
+			m_pPlayer2->invincibility = 1;
 		}
 
 		addLivePower->update(m_Timer.GetTimeElapsed());
@@ -803,7 +937,7 @@ void CGameApp::AnimateObjects()
 			
 			if (m_pPlayer->getLives() < 3)
 			{
-				setPLives(m_pPlayer->getLives() + 1);
+				setPLives(m_pPlayer->getLives() + 1, m_pPlayer2->getLives());
 			}
 		}
 
@@ -821,6 +955,31 @@ void CGameApp::AnimateObjects()
 		if (powerUpCollision(gunPower, m_pPlayer))
 		{
 			m_pPlayer->gunPowerUp = 1;
+		}
+
+		if (powerUpCollision(addLivePower, m_pPlayer2))
+		{
+
+			if (m_pPlayer2->getLives() < 3)
+			{
+				setPLives(m_pPlayer->getLives(), m_pPlayer2->getLives() + 1);
+			}
+		}
+
+		if (powerUpCollision(doublerPower, m_pPlayer2))
+		{
+			m_pPlayer2->doublerPowerUp = 1;
+		}
+
+		if (powerUpCollision(shieldPower, m_pPlayer2))
+		{
+			m_pPlayer2->shield = 1;
+			m_pPlayer2->invincibility = 1;
+		}
+
+		if (powerUpCollision(gunPower, m_pPlayer2))
+		{
+			m_pPlayer2->gunPowerUp = 1;
 		}
 
 		for (auto bul : bullets)
@@ -843,17 +1002,24 @@ void CGameApp::AnimateObjects()
 
 		break;
 	
+	case GameState::PAUSE:
+		mciSendString("stop data/sounds/car4_relanti.wav", NULL, 0, NULL);
+		mciSendString("play data/sounds/song.wav", NULL, 0, NULL);
+		break;
+
 	case GameState::WON:
 		switch (m_levels)
 		{
 		case Levels::LEVEL5:
-			m_scoreP1->move(Vec2(m_screenSize.x / 2, m_screenSize.y / 2 + 100));
+			m_scoreP1->move(Vec2(m_screenSize.x / 2 - 150, m_screenSize.y / 2 + 200));
+			m_scoreP2->move(Vec2(m_screenSize.x / 2 + 150, m_screenSize.y / 2 + 200));
 			break;
 		}
 		break;
 	
 	case GameState::LOST:
-		m_scoreP1->move(Vec2(m_screenSize.x / 2, m_screenSize.y / 2 + 100));
+		m_scoreP1->move(Vec2(m_screenSize.x / 2 - 150, m_screenSize.y / 2 + 200));
+		m_scoreP2->move(Vec2(m_screenSize.x / 2 + 150, m_screenSize.y / 2 + 200));
 		break;
 	}
 }
@@ -872,15 +1038,21 @@ void CGameApp::DrawObjects()
 	{
 	case GameState::START:
 		m_pPlayer->Velocity() = Vec2(0, 0);
+		m_pPlayer2->Velocity() = Vec2(0, 0);
 		break;
 	case GameState::ONGOING:
 		scrollingBackground(speedBackground);
 		livesText->draw();
 		scoreText->draw();
+		livesText2->draw();
+		scoreText2->draw();
 		m_scoreP1->draw();
+		m_scoreP2->draw();
 		if (!m_pPlayer->isDead) m_pPlayer->Draw();
+		if (!m_pPlayer2->isDead) m_pPlayer2->Draw();
 
 		for (auto lg : m_livesGreen) lg->draw();
+		for (auto lr : m_livesRed) lr->draw();
 
 		for (auto bul : bullets)
 		{
@@ -897,13 +1069,13 @@ void CGameApp::DrawObjects()
 		if(!gunPower->deleted) gunPower->draw();
 		if(!doublerPower->deleted) doublerPower->draw();
 
-		if (!m_pPlayer->gunPowerUp) shootText->draw();
+		if (!m_pPlayer->gunPowerUp && !m_pPlayer2->gunPowerUp) shootText->draw();
 		else shootTextSel->draw();
 		
-		if (!m_pPlayer->shield) shieldText->draw();
+		if (!m_pPlayer->shield && !m_pPlayer2->shield) shieldText->draw();
 		else shieldTextSel->draw();
 		
-		if (!m_pPlayer->doublerPowerUp) doubleText->draw();
+		if (!m_pPlayer->doublerPowerUp && !m_pPlayer2->doublerPowerUp) doubleText->draw();
 		else doubleTextSel->draw();
 
 		switch (m_levels)
@@ -933,6 +1105,7 @@ void CGameApp::DrawObjects()
 	case GameState::LOST:
 		scrollingBackground(speedBackground);
 		m_scoreP1->draw();
+		m_scoreP2->draw();
 		m_lostSprite->draw();
 		mciSendString("play data/sounds/lose.wav", NULL, 0, NULL);
 		break;
@@ -942,6 +1115,7 @@ void CGameApp::DrawObjects()
 		{
 		case Levels::LEVEL5:
 			m_scoreP1->draw();
+			m_scoreP2->draw();
 			m_wonSprite->draw();
 			mciSendString("play data/sounds/win.wav", NULL, 0, NULL);
 			break;
@@ -949,10 +1123,15 @@ void CGameApp::DrawObjects()
 		break;
 	case GameState::PAUSE:
 		m_pPlayer->Velocity() = Vec2(0, 0);
+		m_pPlayer2->Velocity() = Vec2(0, 0);
 		livesText->draw();
 		scoreText->draw();
+		livesText2->draw();
+		scoreText2->draw();
 		m_scoreP1->draw();
+		m_scoreP2->draw();
 		for (auto lg : m_livesGreen) lg->draw();
+		for (auto lr : m_livesRed) lr->draw();
 		switch (m_levels)
 		{
 		case Levels::LEVEL1:
@@ -1099,6 +1278,12 @@ void CGameApp::removeDead()
 		m_pPlayer->Explode();
 	}
 
+	if (!m_pPlayer2->getLives() && !m_pPlayer2->hasExploded())
+	{
+		fTimer = SetTimer(m_hWnd, 1, 70, NULL);
+		m_pPlayer2->Explode();
+	}
+
 	for (auto enem : m_enemies)
 	{
 		if (enem->isDead)
@@ -1109,7 +1294,7 @@ void CGameApp::removeDead()
 	}
 }
 
-bool CGameApp::Collision()
+bool CGameApp::CollisionPlayer1()
 {
 	for (auto enem : m_enemies)
 	{
@@ -1128,6 +1313,37 @@ bool CGameApp::Collision()
 								m_livesGreen.pop_back();
 								m_pPlayer->Position() = Vec2(690, 600);
 								m_pPlayer->Velocity() = Vec2(0, 0);
+								enem->Explode();
+								mciSendString("play data/sounds/explosion.wav", NULL, 0, NULL);
+								return true;
+							}
+						}
+		}
+
+	}
+
+	return false;
+}
+
+bool CGameApp::CollisionPlayer2()
+{
+	for (auto enem : m_enemies)
+	{
+		if (!m_pPlayer2->invincibility)
+		{
+			if (m_pPlayer2->Position().x + (m_pPlayer2->getSize().x / 2) > enem->Position().x - (enem->getSize().x / 2))
+				if (m_pPlayer2->Position().x - (m_pPlayer2->getSize().x / 2) < enem->Position().x + (enem->getSize().x / 2))
+					if (m_pPlayer2->Position().y + (m_pPlayer2->getSize().y / 2) > enem->Position().y - (enem->getSize().y / 2))
+						if (m_pPlayer2->Position().y - (m_pPlayer2->getSize().y / 2) < enem->Position().y + (enem->getSize().y / 2))
+						{
+							if (!m_pPlayer2->hasExploded() && m_livesRed.size() > 0)
+							{
+								fTimer = SetTimer(m_hWnd, 1, 70, NULL);
+								m_pPlayer2->takeDamage();
+								delete m_livesRed.back();
+								m_livesRed.pop_back();
+								m_pPlayer2->Position() = Vec2(850, 600);
+								m_pPlayer2->Velocity() = Vec2(0, 0);
 								enem->Explode();
 								mciSendString("play data/sounds/explosion.wav", NULL, 0, NULL);
 								return true;
@@ -1167,9 +1383,18 @@ bool CGameApp::detectBulletCollision(const Sprite* bullet)
 {
 	for (auto enem : m_enemies)
 	{
-		if (bulletCollision(*bullet, *enem))
+		if (bulletCollision(*bullet, *enem) && m_pPlayer->gunPowerUp)
 		{
 			m_scoreP1->updateScore(100);
+			fTimer = SetTimer(m_hWnd, 1, 70, NULL);
+			enem->Explode();
+			mciSendString("play data/sounds/explosion.wav", NULL, 0, NULL);
+			return true;
+		}
+
+		if (bulletCollision(*bullet, *enem) && m_pPlayer2->gunPowerUp)
+		{
+			m_scoreP2->updateScore(100);
 			fTimer = SetTimer(m_hWnd, 1, 70, NULL);
 			enem->Explode();
 			mciSendString("play data/sounds/explosion.wav", NULL, 0, NULL);
@@ -1212,12 +1437,15 @@ void CGameApp::fireBullet(const Vec2 position, const Vec2 velocity)
 	}
 }
 
-void CGameApp::setPLives(int livesP1)
+void CGameApp::setPLives(int livesP1, int livesP2)
 {
 	m_pPlayer->setLives(livesP1);
+	m_pPlayer2->setLives(livesP1);
 
 	Vec2 greenPos(30, 80);
 	Vec2 increment(45, 0);
+
+	Vec2 redPos(30, 570);
 
 	for (int it = 0; it != livesP1; ++it) {
 		m_livesGreen.push_back(new Sprite("data/heart.bmp", RGB(0xff, 0x00, 0xff)));
@@ -1229,11 +1457,22 @@ void CGameApp::setPLives(int livesP1)
 
 		greenPos += increment;
 	}
+
+	for (int it = 0; it != livesP2; ++it) {
+		m_livesRed.push_back(new Sprite("data/heart.bmp", RGB(0xff, 0x00, 0xff)));
+		auto& lastRed = m_livesRed.back();
+
+		lastRed->mPosition = redPos;
+		lastRed->mVelocity = Vec2(0, 0);
+		lastRed->setBackBuffer(m_pBBuffer);
+
+		redPos += increment;
+	}
 }
 
 void CGameApp::updateGameState()
 {
-	if (m_pPlayer->isDead && m_gameState == ONGOING) {
+	if (m_pPlayer->isDead && m_pPlayer2->isDead && m_gameState == ONGOING) {
 		m_gameState = LOST;
 	}
 	else if (!m_enemies.size() && m_gameState == ONGOING) {
@@ -1246,6 +1485,8 @@ void CGameApp::updateGameState()
 		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
+		m_pPlayer2->Position() = Vec2(850, 600);
+		m_pPlayer2->Velocity() = Vec2(0, 0);
 		m_levels = LEVEL2;
 		levelForSave = "level2";
 		m_gameState = ONGOING;
@@ -1257,6 +1498,8 @@ void CGameApp::updateGameState()
 		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
+		m_pPlayer2->Position() = Vec2(850, 600);
+		m_pPlayer2->Velocity() = Vec2(0, 0);
 		m_levels = LEVEL3;
 		levelForSave = "level3";
 		m_gameState = ONGOING;
@@ -1268,6 +1511,8 @@ void CGameApp::updateGameState()
 		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
+		m_pPlayer2->Position() = Vec2(850, 600);
+		m_pPlayer2->Velocity() = Vec2(0, 0);
 		m_levels = LEVEL4;
 		levelForSave = "level4";
 		m_gameState = ONGOING;
@@ -1279,6 +1524,8 @@ void CGameApp::updateGameState()
 		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
+		m_pPlayer2->Position() = Vec2(850, 600);
+		m_pPlayer2->Velocity() = Vec2(0, 0);
 		m_levels = LEVEL5;
 		levelForSave = "level5";
 		m_gameState = ONGOING;
@@ -1323,7 +1570,9 @@ void CGameApp::saveGame()
 	std::ofstream save("savegame/savegame.save");
 
 	save << m_pPlayer->Position().x << " " << m_pPlayer->Position().y << " " << m_pPlayer->getLives() << " ";
+	save << m_pPlayer2->Position().x << " " << m_pPlayer2->Position().y << " " << m_pPlayer2->getLives() << " ";
 	save << m_scoreP1->getScore() << "\n";
+	save << m_scoreP2->getScore() << "\n";
 	save << levelForSave << "\n";
 
 	save << m_enemies.size() << "\n";
@@ -1341,16 +1590,19 @@ void CGameApp::loadGame()
 	while (m_enemies.size()) delete m_enemies.back(), m_enemies.pop_back();
 	while (bullets.size()) delete bullets.back(), bullets.pop_back();
 	while (m_livesGreen.size()) delete m_livesGreen.back(), m_livesGreen.pop_back();
+	while (m_livesRed.size()) delete m_livesRed.back(), m_livesRed.pop_back();
 
-	double cdx, cdy;
-	int livesP, score, noEnem;
+	double cdx, cdy, cdx1, cdy1;
+	int livesP1, livesP2, score1, score2, noEnem;
 	string levelLoc;
 
-	save >> cdx >> cdy >> livesP >> score >> levelLoc;
+	save >> cdx >> cdy >> livesP1 >> cdx1 >> cdy1 >> livesP2 >> score1 >> score2 >> levelLoc;
 	m_pPlayer->Position() = Vec2(cdx, cdy);
-	m_scoreP1->setScore(score);
+	m_pPlayer2->Position() = Vec2(cdx1, cdy1);
+	m_scoreP1->setScore(score1);
+	m_scoreP2->setScore(score2);
 
-	setPLives(livesP);
+	setPLives(livesP1, livesP2);
 
 	save >> noEnem;
 	addEnemies(noEnem, 2, 50);
@@ -1450,7 +1702,7 @@ void CGameApp::addPowerUp(int powerUp)
 	positionY = auxPositionY2 - (2 * auxPositionY2);
 	auxPositionY1 = auxPositionY2;
 
-	gunPower->mPosition = Vec2(positionX, 150);
+	gunPower->mPosition = Vec2(positionX, positionY);
 	gunPower->mVelocity = Vec2(0, 40);
 
 	//doubler power up - double your points
