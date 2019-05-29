@@ -26,6 +26,7 @@ int			powerUp = 0;
 int			powerUpShield = 0;
 int			powerUpGun = 0;
 int			powerUpDouble = 0;
+int			horn = 0;
 
 //-----------------------------------------------------------------------------
 // CGameApp Member Functions
@@ -621,14 +622,17 @@ void CGameApp::ProcessInput( )
 	if (m_gameState == GameState::START || m_gameState == GameState::PAUSE) {
 		if (pKeyBuffer[VK_UP] & 0xF0 && gameMenu->frameCounter >= 20) {
 			gameMenu->opUp(m_gameState);
+			mciSendString("play data/sounds/menu_select.wav", NULL, 0, NULL);
 			gameMenu->frameCounter = 0;
 		}
 		if (pKeyBuffer[VK_DOWN] & 0xF0 && gameMenu->frameCounter >= 20) {
 			gameMenu->opDown(m_gameState);
+			mciSendString("play data/sounds/menu_select.wav", NULL, 0, NULL);
 			gameMenu->frameCounter = 0;
 		}
 
 		if (pKeyBuffer[VK_RETURN] & 0xF0) {
+			mciSendString("play data/sounds/menu_sel.wav", NULL, 0, NULL);
 			if (gameMenu->getChoice() == 0)
 				m_gameState = GameState::ONGOING;
 
@@ -660,6 +664,7 @@ void CGameApp::ProcessInput( )
 		if (pKeyBuffer[VK_SPACE] & 0xF0 && m_pPlayer->frameCounter() >= 20 && m_pPlayer->gunPowerUp == 1)
 		{
 			fireBullet(m_pPlayer->Position(), Vec2(0, -250));
+			mciSendString("play data/sounds/shoot.wav", NULL, 0, NULL);
 			m_pPlayer->frameCounter() = 0;
 		}
 	}
@@ -693,7 +698,11 @@ void CGameApp::AnimateObjects()
 
 	switch (m_gameState)
 	{
+	case GameState::START:
+		mciSendString("play data/sounds/song.wav", NULL, 0, NULL);
+		break;
 	case GameState::ONGOING:
+		mciSendString("stop data/sounds/song.wav", NULL, 0, NULL);
 		if (!m_pPlayer->isDead)
 		{
 			if (!m_pPlayer->hasExploded())
@@ -704,7 +713,7 @@ void CGameApp::AnimateObjects()
 					incrementScore ++;
 					if (incrementScore % 2 == 0)
 						m_scoreP1->updateScore(1);
-					if (powerUpDouble == 300)
+					if (powerUpDouble == 400)
 					{
 						m_pPlayer->doublerPowerUp = 0;
 						powerUpDouble = 0;
@@ -721,7 +730,7 @@ void CGameApp::AnimateObjects()
 				if (m_pPlayer->invincibility == 1)
 				{
 					powerUp++;
-					if (powerUp == 300)
+					if (powerUp == 400)
 					{
 						powerUp = 0;
 						m_pPlayer->invincibility = 0;
@@ -731,7 +740,7 @@ void CGameApp::AnimateObjects()
 				if (m_pPlayer->gunPowerUp == 1)
 				{
 					powerUpGun++;
-					if (powerUpGun == 300)
+					if (powerUpGun == 500)
 					{
 						powerUpGun = 0;
 						m_pPlayer->gunPowerUp = 0;
@@ -741,10 +750,11 @@ void CGameApp::AnimateObjects()
 				if (m_pPlayer->shield == 1)
 				{
 					powerUpShield++;
-					if (powerUpShield == 300)
+					if (powerUpShield == 400)
 					{
 						powerUpShield = 0;
 						m_pPlayer->shield = 0;
+						m_pPlayer->invincibility = 0;
 					}
 				}
 			}
@@ -776,6 +786,7 @@ void CGameApp::AnimateObjects()
 
 		if (powerUpCollision(addLivePower, m_pPlayer))
 		{
+			
 			if (m_pPlayer->getLives() < 3)
 			{
 				setPLives(m_pPlayer->getLives() + 1);
@@ -790,6 +801,7 @@ void CGameApp::AnimateObjects()
 		if (powerUpCollision(shieldPower, m_pPlayer))
 		{
 			m_pPlayer->shield = 1;
+			m_pPlayer->invincibility = 1;
 		}
 
 		if (powerUpCollision(gunPower, m_pPlayer))
@@ -807,6 +819,11 @@ void CGameApp::AnimateObjects()
 				break;
 			}
 		}
+
+		horn++;
+		if(horn % 500 == 0) mciSendString("play data/sounds/car+horn+x.wav", NULL, 0, NULL);
+
+		mciSendString("play data/sounds/car4_relanti.wav", NULL, 0, NULL);
 
 		break;
 	
@@ -901,6 +918,7 @@ void CGameApp::DrawObjects()
 		scrollingBackground(speedBackground);
 		m_scoreP1->draw();
 		m_lostSprite->draw();
+		mciSendString("play data/sounds/lose.wav", NULL, 0, NULL);
 		break;
 	case GameState::WON:
 		scrollingBackground(speedBackground);
@@ -909,6 +927,7 @@ void CGameApp::DrawObjects()
 		case Levels::LEVEL5:
 			m_scoreP1->draw();
 			m_wonSprite->draw();
+			mciSendString("play data/sounds/win.wav", NULL, 0, NULL);
 			break;
 		}
 		break;
@@ -1093,11 +1112,12 @@ bool CGameApp::Collision()
 								m_pPlayer->Position() = Vec2(690, 600);
 								m_pPlayer->Velocity() = Vec2(0, 0);
 								enem->Explode();
-								PlaySound("data/explosion.wav", NULL, SND_FILENAME | SND_ASYNC);
+								mciSendString("play data/sounds/explosion.wav", NULL, 0, NULL);
 								return true;
 							}
 						}
 		}
+
 	}
 
 	return false;
@@ -1112,6 +1132,7 @@ bool CGameApp::detectBulletCollision(const Sprite* bullet)
 			m_scoreP1->updateScore(100);
 			fTimer = SetTimer(m_hWnd, 1, 70, NULL);
 			enem->Explode();
+			mciSendString("play data/sounds/explosion.wav", NULL, 0, NULL);
 			return true;
 		}
 	}
@@ -1181,6 +1202,7 @@ void CGameApp::updateGameState()
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL1)
 	{
 		addEnemies(25, 3, 70);
+		mciSendString("play data/sounds/car4_acc.wav", NULL, 0, NULL);
 		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
@@ -1191,6 +1213,7 @@ void CGameApp::updateGameState()
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL2)
 	{
 		addEnemies(28, 3, 75);
+		mciSendString("play data/sounds/car4_acc.wav", NULL, 0, NULL);
 		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
@@ -1201,6 +1224,7 @@ void CGameApp::updateGameState()
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL3)
 	{
 		addEnemies(30, 3, 75);
+		mciSendString("play data/sounds/car4_acc.wav", NULL, 0, NULL);
 		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
@@ -1211,6 +1235,7 @@ void CGameApp::updateGameState()
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL4)
 	{
 		addEnemies(35, 4, 80);
+		mciSendString("play data/sounds/car4_acc.wav", NULL, 0, NULL);
 		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
@@ -1405,6 +1430,7 @@ bool CGameApp::powerUpCollision(Sprite* powerUp, CPlayer* p1)
 			if (powerUp->mPosition.y >= p1->Position().y - (p1->getSize().y / 2))
 				if (powerUp->mPosition.y <= p1->Position().y + (p1->getSize().y / 2))
 				{
+					mciSendString("play data/sounds/power_up.wav", NULL, 0, NULL);
 					powerUp->deleted = 1;
 					return true;
 				}
