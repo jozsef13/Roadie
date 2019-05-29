@@ -296,6 +296,9 @@ LRESULT CGameApp::DisplayWndProc( HWND hWnd, UINT Message, WPARAM wParam, LPARAM
 			case 'R':
 				m_pPlayer->Rotate();
 				break;
+			case 'H':
+				mciSendString("play data/sounds/car+horn+x.wav", NULL, 0, NULL);
+				break;
 			}
 			break;
 
@@ -713,7 +716,10 @@ void CGameApp::AnimateObjects()
 					incrementScore ++;
 					if (incrementScore % 2 == 0)
 						m_scoreP1->updateScore(1);
-					if (powerUpDouble == 400)
+
+					if(powerUpDouble == 300)
+						mciSendString("play data/sounds/timer.wav", NULL, 0, NULL);
+					if (powerUpDouble == 500)
 					{
 						m_pPlayer->doublerPowerUp = 0;
 						powerUpDouble = 0;
@@ -740,6 +746,10 @@ void CGameApp::AnimateObjects()
 				if (m_pPlayer->gunPowerUp == 1)
 				{
 					powerUpGun++;
+					if (powerUpGun == 300)
+					{
+						mciSendString("play data/sounds/timer.wav", NULL, 0, NULL);
+					}
 					if (powerUpGun == 500)
 					{
 						powerUpGun = 0;
@@ -750,7 +760,11 @@ void CGameApp::AnimateObjects()
 				if (m_pPlayer->shield == 1)
 				{
 					powerUpShield++;
-					if (powerUpShield == 400)
+					if (powerUpShield == 300)
+					{
+						mciSendString("play data/sounds/timer.wav", NULL, 0, NULL);
+					}
+					if (powerUpShield == 500)
 					{
 						powerUpShield = 0;
 						m_pPlayer->shield = 0;
@@ -767,7 +781,7 @@ void CGameApp::AnimateObjects()
 		{
 			enem->Update(m_Timer.GetTimeElapsed());
 
-			if (enem->Position().y + (enem->getSize().y / 2) >= GetSystemMetrics(SM_CYSCREEN) + 350)
+			if (enem->Position().y + (enem->getSize().y / 2) >= GetSystemMetrics(SM_CYSCREEN) + 125)
 			{
 				enem->isDead = 1;
 			}
@@ -819,9 +833,6 @@ void CGameApp::AnimateObjects()
 				break;
 			}
 		}
-
-		horn++;
-		if(horn % 500 == 0) mciSendString("play data/sounds/car+horn+x.wav", NULL, 0, NULL);
 
 		mciSendString("play data/sounds/car4_relanti.wav", NULL, 0, NULL);
 
@@ -1030,7 +1041,7 @@ void CGameApp::addEnemies(int nrEnemies, int timeVelocity, int velocity)
 		m_enemies.back()->Position() = Vec2(positionX, positionY);
 		m_enemies.back()->Velocity() = Vec2(0, velocityY);
 
-		auxPositionY[i + 1] = rand() % (nrEnemies * 250) + 100;
+		auxPositionY[i + 1] = rand() % (nrEnemies * 200) + 100;
 		positionY = auxPositionY[i + 1] - (2 * auxPositionY[i + 1]);
 		auxPositionY[i + 1] = positionY;
 		for (j = 0; j < i + 1; j++)
@@ -1056,7 +1067,7 @@ void CGameApp::addEnemies(int nrEnemies, int timeVelocity, int velocity)
 
 				if (okPos == 0)
 				{
-					auxPositionY[i + 1] = rand() % (nrEnemies * 250) + 100;
+					auxPositionY[i + 1] = rand() % (nrEnemies * 200) + 100;
 					positionY = auxPositionY[i + 1] - (2 * auxPositionY[i + 1]);
 					auxPositionY[i + 1] = positionY;
 				}
@@ -1252,7 +1263,7 @@ void CGameApp::updateGameState()
 	}
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL3)
 	{
-		addEnemies(30, 3, 75);
+		addEnemies(30, 3, 80);
 		mciSendString("play data/sounds/finishLevel.wav", NULL, 0, NULL);
 		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
@@ -1263,7 +1274,7 @@ void CGameApp::updateGameState()
 	}
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL4)
 	{
-		addEnemies(35, 4, 80);
+		addEnemies(35, 4, 85);
 		mciSendString("play data/sounds/finishLevel.wav", NULL, 0, NULL);
 		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
@@ -1439,7 +1450,7 @@ void CGameApp::addPowerUp(int powerUp)
 	positionY = auxPositionY2 - (2 * auxPositionY2);
 	auxPositionY1 = auxPositionY2;
 
-	gunPower->mPosition = Vec2(positionX, positionY);
+	gunPower->mPosition = Vec2(positionX, 150);
 	gunPower->mVelocity = Vec2(0, 40);
 
 	//doubler power up - double your points

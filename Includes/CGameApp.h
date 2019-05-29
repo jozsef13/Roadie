@@ -165,6 +165,8 @@ private:
 	MenuSprite*					gameMenu;
 	string						levelForSave;
 
+
+
 };
 
 #endif // _CGAMEAPP_H_
