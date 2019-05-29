@@ -93,6 +93,7 @@ private:
 	void		loadGame();
 	void		addPowerUp(int powerUp);
 	bool		powerUpCollision(Sprite* powerUp, CPlayer* p1);
+	bool		CollisionEnemy(CPlayer* enemy);
 
 	
 	//-------------------------------------------------------------------------

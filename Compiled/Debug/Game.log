@@ -2,10 +2,10 @@
   CGameApp.cpp
 e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(113): warning C4244: 'initializing': conversion from 'LONG' to 'USHORT', possible loss of data
 e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(114): warning C4244: 'initializing': conversion from 'LONG' to 'USHORT', possible loss of data
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(972): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(1257): warning C4101: 'y': unreferenced local variable
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(1257): warning C4101: 'i': unreferenced local variable
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(1257): warning C4101: 'x': unreferenced local variable
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(1346): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(1065): warning C4700: uninitialized local variable 'timeVelocityLocal' used
+e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(978): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(1286): warning C4101: 'y': unreferenced local variable
+e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(1286): warning C4101: 'i': unreferenced local variable
+e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(1286): warning C4101: 'x': unreferenced local variable
+e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(1375): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+e:\documents\automatica\anul ii\semestrul ii\computer graphics\project\roadie\source\cgameapp.cpp(1071): warning C4700: uninitialized local variable 'timeVelocityLocal' used
   Game.vcxproj -> E:\Documents\AUTOMATICA\Anul II\Semestrul II\Computer Graphics\Project\Roadie\d_Game.exe

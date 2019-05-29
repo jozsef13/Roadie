@@ -723,7 +723,7 @@ void CGameApp::AnimateObjects()
 				else
 				{
 					incrementScore++;
-					if (incrementScore % 10 == 0)
+					if (incrementScore % 4 == 0)
 						m_scoreP1->updateScore(1);
 				}
 
@@ -824,6 +824,11 @@ void CGameApp::AnimateObjects()
 		if(horn % 500 == 0) mciSendString("play data/sounds/car+horn+x.wav", NULL, 0, NULL);
 
 		mciSendString("play data/sounds/car4_relanti.wav", NULL, 0, NULL);
+
+		for (auto enem : m_enemies)
+		{
+			CollisionEnemy(enem);
+		}
 
 		break;
 	
@@ -932,6 +937,7 @@ void CGameApp::DrawObjects()
 		}
 		break;
 	case GameState::PAUSE:
+		m_pPlayer->Velocity() = Vec2(0, 0);
 		livesText->draw();
 		scoreText->draw();
 		m_scoreP1->draw();
@@ -978,7 +984,7 @@ void CGameApp::addEnemies(int nrEnemies, int timeVelocity, int velocity)
 	{
 		if (i % 3 == 0 && i > 2)
 		{
-			m_enemies.push_back(new CPlayer(m_pBBuffer, "data/truck.bmp"));
+			m_enemies.push_back(new CPlayer(m_pBBuffer, "data/car6.bmp"));
 		}
 		else if (i % 5 == 0 && i > 2)
 		{
@@ -1123,6 +1129,29 @@ bool CGameApp::Collision()
 	return false;
 }
 
+bool CGameApp::CollisionEnemy(CPlayer* enemy)
+{
+	for (auto enem : m_enemies)
+	{
+		if (enem != enemy)
+		{
+			if (enemy->Position().x + (enemy->getSize().x / 2) > enem->Position().x - (enem->getSize().x / 2))
+				if (enemy->Position().x - (enemy->getSize().x / 2) < enem->Position().x + (enem->getSize().x / 2))
+					if (enemy->Position().y + (enemy->getSize().y / 2) > enem->Position().y - (enem->getSize().y / 2))
+						if (enemy->Position().y - (enemy->getSize().y / 2) < enem->Position().y + (enem->getSize().y / 2))
+						{
+							if (!enemy->isDead)
+							{
+								enem->isDead = 1;
+								return true;
+							}
+						}
+		}
+	}
+
+	return false;
+}
+
 bool CGameApp::detectBulletCollision(const Sprite* bullet)
 {
 	for (auto enem : m_enemies)
@@ -1202,7 +1231,7 @@ void CGameApp::updateGameState()
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL1)
 	{
 		addEnemies(25, 3, 70);
-		mciSendString("play data/sounds/car4_acc.wav", NULL, 0, NULL);
+		mciSendString("play data/sounds/finishLevel.wav", NULL, 0, NULL);
 		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
@@ -1213,7 +1242,7 @@ void CGameApp::updateGameState()
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL2)
 	{
 		addEnemies(28, 3, 75);
-		mciSendString("play data/sounds/car4_acc.wav", NULL, 0, NULL);
+		mciSendString("play data/sounds/finishLevel.wav", NULL, 0, NULL);
 		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
@@ -1224,7 +1253,7 @@ void CGameApp::updateGameState()
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL3)
 	{
 		addEnemies(30, 3, 75);
-		mciSendString("play data/sounds/car4_acc.wav", NULL, 0, NULL);
+		mciSendString("play data/sounds/finishLevel.wav", NULL, 0, NULL);
 		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
@@ -1235,7 +1264,7 @@ void CGameApp::updateGameState()
 	else if (!m_enemies.size() && m_gameState == WON && m_levels == LEVEL4)
 	{
 		addEnemies(35, 4, 80);
-		mciSendString("play data/sounds/car4_acc.wav", NULL, 0, NULL);
+		mciSendString("play data/sounds/finishLevel.wav", NULL, 0, NULL);
 		addPowerUp(powerUp);
 		m_pPlayer->Position() = Vec2(690, 600);
 		m_pPlayer->Velocity() = Vec2(0, 0);
